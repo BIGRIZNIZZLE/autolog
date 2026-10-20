@@ -185,27 +185,45 @@ const FUEL_FIELDS = [
   F.notes,
 ];
 const VEHICLE_FIELDS = [
+  { k: 'vin', l: 'VIN', t: 'vin' },
   { k: 'name', l: 'Nickname', t: 'text', ph: 'e.g. Daily driver' },
   { k: 'year', l: 'Year', t: 'num', step: 1, half: 1, req: 1 }, { k: 'make', l: 'Make', t: 'text', half: 1, req: 1 },
   { k: 'model', l: 'Model', t: 'text', half: 1, req: 1 }, { k: 'trim', l: 'Trim / engine', t: 'text', half: 1 },
   { k: 'odometer', l: 'Current odometer', t: 'num', unit: 'mi', step: 1, half: 1 }, { k: 'tank', l: 'Tank size', t: 'num', unit: 'gal', step: 0.1, half: 1, hint: 'Used for estimated range. Leave it blank to use your largest fill.' },
-  { k: 'vin', l: 'VIN', t: 'text' }, F.notes,
+  H('Details'),
+  { k: 'engine', l: 'Engine', t: 'text', ph: 'e.g. 1.5 L · 4 cyl · In-Line' },
+  { k: 'fuelType', l: 'Fuel type', t: 'text', half: 1 }, { k: 'drive', l: 'Drive type', t: 'text', half: 1 },
+  { k: 'body', l: 'Body', t: 'text', half: 1 }, { k: 'transmission', l: 'Transmission', t: 'text', half: 1 },
+  F.notes,
 ];
 
 /* ---------- storage ---------- */
 function blank() { return { version: 1, vehicles: [], programs: [], settings: { theme: 'auto', current: null } }; }
 function normalize(j) {
-  j.version = 1; j.settings = Object.assign({ theme: 'auto', current: null }, j.settings || {});
+  j.version = 2; j.settings = Object.assign({ theme: 'auto', current: null }, j.settings || {});
   j.vehicles = (j.vehicles || []).filter(v => v && v.id);
   j.programs = (Array.isArray(j.programs) ? j.programs : []).filter(x => x && x.id);
-  j.vehicles.forEach(v => { v.fuel = Array.isArray(v.fuel) ? v.fuel : []; v.maint = v.maint || {}; SECTIONS.forEach(s => { v.maint[s.id] = Array.isArray(v.maint[s.id]) ? v.maint[s.id] : []; }); });
+  j.vehicles.forEach(v => { v.fuel = Array.isArray(v.fuel) ? v.fuel : []; v.maint = v.maint || {}; v.specs = (v.specs && typeof v.specs === 'object') ? v.specs : {}; SECTIONS.forEach(s => { v.maint[s.id] = Array.isArray(v.maint[s.id]) ? v.maint[s.id] : []; }); });
   if (!j.vehicles.find(v => v.id === j.settings.current)) j.settings.current = j.vehicles[0]?.id || null;
   return j;
 }
-function load() { try { const j = JSON.parse(localStorage.getItem(KEY)); if (j && Array.isArray(j.vehicles)) return normalize(j); } catch (e) { console.warn('load failed', e); } return blank(); }
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY); const j = JSON.parse(raw);
+    if (j && Array.isArray(j.vehicles)) {
+      // Non-destructive migration: keep an untouched copy of pre-v2 data before upgrading it in place.
+      if ((j.version || 1) < 2 && !localStorage.getItem('autolog:backup:v1')) { try { localStorage.setItem('autolog:backup:v1', raw); } catch (e) { /* quota: skip backup, still migrate in memory */ } }
+      const wasOld = (j.version || 1) < 2, n = normalize(j);
+      // Write the upgraded copy only once the untouched backup is safely stored.
+      if (wasOld && localStorage.getItem('autolog:backup:v1')) { try { localStorage.setItem(KEY, JSON.stringify(n)); } catch (e) { /* keep in memory */ } }
+      return n;
+    }
+  } catch (e) { console.warn('load failed', e); }
+  return blank();
+}
 let db = load();
-function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { toast('Couldn’t save. Your browser storage may be full.'); } }
-const cur = () => db.vehicles.find(v => v.id === db.settings.current) || null;
+function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { toast('Couldn’t save. Your browser storage may be full.'); } try { afterSave(); } catch (e) { console.warn(e); } }
+const cur = () => { const v = db.vehicles.find(x => x.id === db.settings.current) || null; if (v && (!v.specs || typeof v.specs !== 'object')) v.specs = {}; return v; };
 const vname = v => v ? (v.name || [v.year, v.make, v.model].filter(Boolean).join(' ') || 'Vehicle') : 'No vehicle';
 const vdesc = v => [v.year, v.make, v.model, v.trim].filter(Boolean).join(' ');
 function curOdo(v) {
@@ -344,6 +362,16 @@ function insights(v, s) {
     const when = next >= todayISO() ? `so your next fill-up will probably be around ${fdate(next)}` : `so at your usual pace you’re probably due for a fill-up now (or one went unlogged)`;
     out.push({ t: `You drive about ${fmt(s.milesPerDay)} miles a day and fill up about every ${fmt(perTank)} days, ${when}.${monthly ? ` That’s roughly ${money(monthly, 0)} a month on fuel.` : ''}` });
   }
+  if (v.epa && num(v.epa.comb) && s.avgMpg) {
+    const c = num(v.epa.comb), ci = num(v.epa.city), hw = num(v.epa.hwy), d = s.avgMpg - c, pct = d / c * 100;
+    let where = '';
+    if (hw && s.avgMpg >= hw) where = ' That’s at or above even the highway rating, so it looks like mostly steady highway driving.';
+    else if (ci && s.avgMpg < ci) where = ' That’s below the city rating. Short trips, idling, cold weather, or heavy loads can cause this, and so can low tire pressure.';
+    else if (ci && hw) where = ` That falls between the city (${ci}) and highway (${hw}) ratings, so you’re doing a mix of both.`;
+    out.splice(Math.min(1, out.length), 0, { t: `Your ${fmt(s.avgMpg, 1)} MPG average is ${Math.abs(pct) < 1 ? 'right on' : `${fmt(Math.abs(pct), 0)}% ${d > 0 ? 'above' : 'below'}`} the EPA combined rating of ${c} MPG.${where}`, kind: Math.abs(pct) < 5 || d > 0 ? 'good' : 'warn' });
+  }
+  const minO = num(v.specs?.minOctane);
+  if (minO) { const lowFills = s.fills.filter(e => octVal(e) != null && octVal(e) < minO); if (lowFills.length) out.push({ t: `${plural(lowFills.length, 'fill-up')} used fuel below the ${minO} octane in your specs${/required/i.test(v.specs.fuelGrade || '') ? ', which your manual lists as required' : ''}. Using a lower grade than recommended can reduce power and MPG.`, kind: 'warn' }); }
   if (s.partialsUsed) out.push({ t: `${plural(s.partialsUsed, 'partial fill')} ${s.partialsUsed === 1 ? 'was' : 'were'} added into the full-to-full MPG math, so no fuel goes uncounted.` });
   if (s.restarts) out.push({ t: `${plural(s.restarts, 'fill')} marked “missed a fill” restarted MPG tracking, so one gap won’t throw off your averages.`, kind: 'warn' });
   return out;
@@ -393,6 +421,9 @@ function sectionStatus(sec, v) {
       st = { ...st, level: worse(st.level, lvl), text: `${st.text} · min tread ${mn}/32${mn <= 2 ? ' (replace)' : mn <= 4 ? ' (getting low)' : ''}` };
       st.label = LBL[st.level];
     }
+    const pe = list.find(e => e.psi && TIRE_POS.some(([k]) => num(e.psi[k]) != null)), tg = psiTargets(v);
+    if (pe && (tg.fl || tg.rl)) { const low = TIRE_POS.filter(([k]) => num(pe.psi[k]) != null && tg[k] && num(pe.psi[k]) < tg[k] - 1).map(([, l]) => l);
+      if (low.length) { st = { ...st, level: worse(st.level, 'soon'), text: `${st.text} · ${low.join(', ')} below spec PSI (${fdateS(pe.date)})` }; st.label = LBL[st.level]; } }
     const set = tireSet(v);
     if (set && /^\d{4}$/.test((set.dot || '').trim())) { const yy = 2000 + Number(set.dot.trim().slice(2)); const age = new Date().getFullYear() - yy; if (age >= 6) { st.level = worse(st.level, 'soon'); st.label = LBL[st.level]; st.text += ` · tires ${age} yrs old`; } }
   }
@@ -461,6 +492,7 @@ function fieldHTML(f, vals, pool) {
     case 'seg': return `<div class="${cls}" data-k="${f.k}" role="radiogroup" aria-label="${esc(f.l)}">${lbl}<div class="seg">${f.opts.map(o => `<label><input type="radio" ${name} value="${esc(o)}" ${String(val) === o ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div>${hint}</div>`;
     case 'multi': return `<div class="${cls}" data-k="${f.k}" role="group" aria-label="${esc(f.l)}">${lbl}<div class="seg">${f.opts.map(o => `<label><input type="checkbox" ${name} value="${esc(o)}" ${has(val, o) ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div>${hint}</div>`;
     case 'check': return `<div class="${cls}" data-k="${f.k}"><label class="toggle"><span>${esc(f.l)}${f.sub ? `<small>${esc(f.sub)}</small>` : ''}</span><input type="checkbox" role="switch" ${name} ${val ? 'checked' : ''}></label></div>`;
+    case 'vin': return `<div class="${cls}" data-k="vin">${lbl}<div class="vinrow"><input type="text" name="vin" value="${esc(val)}" maxlength="17" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="17 characters" aria-describedby="vinMsg"><button type="button" class="btn small primary" data-vinlookup>Look up</button></div><small class="muted vinmsg" id="vinMsg">Enter the 17-character VIN (windshield corner or driver’s door jamb) to auto-fill details from NHTSA.</small></div>`;
     case 'progs': {
       if (!db.programs.length) return `<div class="field hint" data-k="${f.k}">You haven’t added any rewards programs yet. <a href="#/rewards" data-close-sheet>Add your programs in Rewards</a> and they’ll show up here so savings roll into your stats.</div>`;
       const arr = Array.isArray(val) ? val : [];
@@ -489,17 +521,20 @@ function readForm(form, fields) {
   }
   return o;
 }
-function openForm({ title, fields, values = {}, pool, onSave, onDelete, saveLabel = 'Save', onInput }) {
+function openForm({ title, fields, values = {}, pool, onSave, onDelete, saveLabel = 'Save', onInput, onClick, warn }) {
   const d = $('#sheet'), form = $('#sheetForm');
   form.innerHTML = `<div class="sheet-head"><h3>${esc(title)}</h3><button type="button" class="icon-btn" data-close aria-label="Close">${I.close}</button></div>
     <div class="sheet-body">${fields.map(f => fieldHTML(f, values, pool)).join('')}
+    ${warn ? '<div class="warnbox" id="formWarn" role="status" aria-live="polite" hidden></div>' : ''}
     ${onDelete ? `<button type="button" class="btn ghost-danger block" data-del style="margin-top:6px">${I.trash} Delete entry</button>` : ''}</div>
     <div class="sheet-foot"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn primary">${I.check} ${esc(saveLabel)}</button></div>`;
-  const applyShow = () => { const vals = readForm(form, fields); fields.forEach(f => { if (f.showIf) { const el = $(`[data-k="${f.k}"]`, form); if (el) el.hidden = !f.showIf(vals); } }); $$('.rw', form).forEach(b => b.classList.toggle('on', !!$('input[data-rwon]', b)?.checked)); };
+  const applyShow = () => { const vals = readForm(form, fields); fields.forEach(f => { if (f.showIf) { const el = $(`[data-k="${f.k}"]`, form); if (el) el.hidden = !f.showIf(vals); } }); $$('.rw', form).forEach(b => b.classList.toggle('on', !!$('input[data-rwon]', b)?.checked));
+    if (warn) { const w = warn(vals) || [], box = $('#formWarn', form); box.hidden = !w.length; box.innerHTML = w.map(x => `<div>⚠ ${esc(x)}</div>`).join(''); } };
   applyShow();
   form.oninput = e => { applyShow(); onInput && onInput(e, form); };
   form.onchange = () => applyShow();
   form.onclick = async e => {
+    if (onClick) onClick(e, form);
     if (e.target.closest('[data-close]')) { e.preventDefault(); d.close(); }
     if (e.target.closest('[data-close-sheet]')) d.close();
     if (e.target.closest('[data-del]')) { e.preventDefault(); if (await confirmDanger('Delete this entry?', 'This can’t be undone.')) { onDelete(); d.close(); render(); toast('Entry deleted'); } }
@@ -524,21 +559,48 @@ function defaults(fields, v, last) {
 }
 
 /* ---------- actions ---------- */
-function addVehicle(existing) {
+function addVehicle(existing, opts = {}) {
+  let pending = null;
+  const lookup = async form => {
+    const msg = $('#vinMsg', form), btn = $('[data-vinlookup]', form);
+    const vin = form.elements.vin.value.trim().toUpperCase(); form.elements.vin.value = vin;
+    const chk = vinCheck(vin);
+    if (!chk.valid) { msg.className = 'vinmsg bad'; msg.textContent = chk.msg; return; }
+    msg.className = 'vinmsg muted'; msg.textContent = 'Looking up VIN with NHTSA…'; btn.disabled = true;
+    try {
+      const r = await decodeVin(vin);
+      const filled = [];
+      Object.entries(r.fields).forEach(([k, val]) => { const el = form.elements[k]; if (el && val) { el.value = val; filled.push(k); $(`[data-k="${k}"]`, form)?.classList.add('autofill'); } });
+      pending = r.raw;
+      msg.className = 'vinmsg good';
+      msg.textContent = `Filled ${filled.length} fields from NHTSA vPIC. Review and edit them, then tap Save.${chk.msg ? ' ' + chk.msg : ''}${r.note ? ' NHTSA note: ' + r.note : ''}`;
+    } catch (e) { msg.className = 'vinmsg bad'; msg.textContent = netMsg(e); }
+    finally { btn.disabled = false; }
+  };
   openForm({
     title: existing ? 'Edit vehicle' : 'Add vehicle', fields: VEHICLE_FIELDS, values: existing || {}, saveLabel: existing ? 'Save' : 'Add vehicle',
+    onInput: (e, form) => { if (e.target.name === 'vin') { const v = e.target.value.trim().toUpperCase(); const msg = $('#vinMsg', form); if (v.length === 17) { const c = vinCheck(v); msg.className = 'vinmsg ' + (c.valid && !c.msg ? 'good' : 'bad'); msg.textContent = c.valid ? (c.msg || 'VIN looks valid (check digit OK). Tap Look up.') : c.msg; } else { msg.className = 'vinmsg muted'; msg.textContent = `${v.length}/17 characters`; } } },
+    onClick: (e, form) => { if (e.target.closest('[data-vinlookup]')) { e.preventDefault(); lookup(form); } },
     onSave: vals => {
+      vals.vin = (vals.vin || '').toUpperCase();
+      if (vals.vin && !vinCheck(vals.vin).valid) { toast('That VIN doesn’t look right. Fix it or clear it to save.'); return false; }
+      if (pending) vals.vpic = pending;
       if (existing) Object.assign(existing, vals);
-      else { const v = { id: uid(), created: todayISO(), ...vals, fuel: [], maint: {} }; SECTIONS.forEach(s => { v.maint[s.id] = []; }); db.vehicles.push(v); db.settings.current = v.id; toast('Vehicle added'); }
+      else { const v = { id: uid(), created: todayISO(), ...vals, fuel: [], maint: {}, specs: {} }; SECTIONS.forEach(s => { v.maint[s.id] = []; }); db.vehicles.push(v); db.settings.current = v.id; toast('Vehicle added'); }
     },
   });
+  if (opts.autoLookup && existing?.vin) lookup($('#sheetForm'));
+  else if (opts.autoLookup) setTimeout(() => $('#sheetForm input[name="vin"]')?.focus(), 50);
 }
 function fuelForm(v, entry) {
   const last = [...v.fuel].sort(byNewest)[0];
   const values = entry ? { ...entry } : { ...defaults(FUEL_FIELDS, v), ...(last ? { octane: last.octane, octaneOther: last.octaneOther, eth: last.eth, ethPct: last.ethPct, station: last.station } : {}) };
+  const sp = v.specs || {};
+  if (!entry && !last && num(sp.minOctane)) { const o = String(num(sp.minOctane)); if (['87', '89', '91', '93'].includes(o)) values.octane = o; else { values.octane = 'Other'; values.octaneOther = num(sp.minOctane); } }
   let manual = entry ? Math.abs((num(entry.total) ?? 0) - (num(entry.gallons) || 0) * (num(entry.price) || 0)) > 0.011 : false;
   openForm({
     title: entry ? 'Edit fill-up' : 'Log fill-up', fields: FUEL_FIELDS, values, pool: x => x.fuel, saveLabel: entry ? 'Save' : 'Add fill-up',
+    warn: vals => specWarnings('fuel', vals, v),
     onInput: (e, form) => {
       const n = e.target.name;
       if (n === 'total') manual = e.target.value !== '';
@@ -567,11 +629,14 @@ function maintForm(v, sec, entry) {
   const last = entries(v, sec.id)[0];
   const values = entry ? { ...entry } : defaults(sec.fields, v, last);
   if (!entry && sec.id === 'tires') { const set = tireSet(v); if (set) Object.assign(values, { brand: set.brand, model: set.model, size: set.size, loadSpeed: set.loadSpeed }); }
+  if (!entry) Object.assign(values, specDefaults(sec.id, v, values));
   openForm({
     title: `${entry ? 'Edit' : 'Log'} ${sec.noun}`, fields: sec.fields, values, pool: x => x.maint[sec.id], saveLabel: entry ? 'Save' : 'Add entry',
+    warn: vals => specWarnings(sec.id, vals, v),
     onSave: vals => { if (entry) Object.assign(entry, vals); else { v.maint[sec.id].push({ id: uid(), ...vals }); toast(`${sec.title} entry added`); } },
     onDelete: entry ? () => { v.maint[sec.id] = v.maint[sec.id].filter(x => x !== entry); save(); } : null,
   });
+  if (sec.id === 'tires') { const t = psiTargets(v); TIRE_POS.forEach(([k]) => { const el = $(`#sheetForm [name="psi.${k}"]`); if (el && t[k]) el.placeholder = `spec ${t[k]}`; }); }
 }
 function pickSheet(title, items) {
   const d = $('#sheet'), form = $('#sheetForm');
@@ -676,7 +741,7 @@ function sampleProgram(libId, extra = {}) {
 }
 function loadSample() {
   const P = { shell: sampleProgram('shell', { memberId: '••• 4821', notes: 'Gold status (sample)' }), costco: sampleProgram('costco', { notes: 'Pay with Costco Anywhere Visa (sample)' }), kwik: sampleProgram('kwik') };
-  const v = sampleVehicle();
+  const v = sampleVehicle(); v.specs = v.specs || {};
   const RW = { 'Fuel Rewards': P.shell.id, 'Costco': P.costco.id, 'Kwik Rewards': P.kwik.id };
   v.fuel.forEach(e => { if (e.program && RW[e.program]) { const pid = RW[e.program]; const r = { pid, name: progName(progById(pid)), cpg: e.centsOff ?? null, saved: e.saved ?? null, points: e.points ?? null }; if (r.cpg != null || r.saved != null || r.points != null || e.program === 'Costco') e.rewards = [r]; delete e.centsOff; delete e.saved; delete e.points; } delete e.program; }); db.vehicles.push(v); db.settings.current = v.id; save(); location.hash = '#/dash'; render(); toast('Sample vehicle and programs loaded. Erase them anytime.');
 }
@@ -724,7 +789,9 @@ function viewDash(v) {
   const s = fuelStats(v), ins = insights(v, s);
   const sts = SECTIONS.map(sec => ({ sec, st: sectionStatus(sec, v) }));
   const over = sts.filter(x => x.st.level === 'over').length, soon = sts.filter(x => x.st.level === 'soon').length;
-  return `<section class="card hero">
+  const dn = dueNow(), dOver = dn.filter(i => i.level === 'over').length;
+  const banner = dn.length && !sessionStorage.getItem('autolog:bannerDismissed') ? `<div class="banner ${dOver ? 'over' : 'soon'}" role="status"><a href="#/reminders" style="color:inherit;flex:1">🔔 <b>${dOver ? `${dOver} overdue` : ''}${dOver && dn.length - dOver ? ', ' : ''}${dn.length - dOver ? `${dn.length - dOver} due soon` : ''}</b> across your vehicles. View reminders →</a><button class="icon-btn" data-act="dismissBanner" aria-label="Dismiss">${I.close}</button></div>` : '';
+  return `${banner}<section class="card hero">
       <div class="hero-top"><div><div class="eyebrow">${esc(vdesc(v) || 'Vehicle')}</div><h2>${esc(vname(v))}</h2></div>
       <button class="chip-btn" data-act="odo" aria-label="Update odometer">${I.gauge} ${fmt(curOdo(v))} mi</button></div>
       <div class="stats">
@@ -732,6 +799,7 @@ function viewDash(v) {
         ${stat('Est. range', fmt(s.range), s.range ? 'mi' : '')}${stat('Fuel spent', money(s.totalSpent, 0))}${stat('Rewards', money(s.totalSaved))}
       </div>
       <div class="row-actions"><button class="btn primary" data-act="addFuel">${I.fuel} Log fill-up</button><button class="btn" data-act="pickService">${I.wrench} Log service</button></div>
+      <div class="hero-links"><a href="#/specs">${I.car} Specs${v.epa ? ` · EPA ${v.epa.comb} mpg` : ''}</a><a href="#/reminders">🔔 Reminders</a></div>
     </section>
     <section class="card"><h3><span class="spark">${I.spark}</span> Insights</h3>${insightsHTML(ins.slice(0, 3))}<a href="#/fuel" class="link">All fuel stats &amp; insights →</a></section>
     <section class="card"><div class="card-head"><h3>Maintenance</h3><a href="#/service" class="link" style="margin:0">View all</a></div>
@@ -816,7 +884,7 @@ function viewGarage() {
   const v = cur();
   return `<div class="page-title"><h2>Garage</h2><button class="btn small primary" data-act="addVehicle">${I.plus} Vehicle</button></div>
     ${db.vehicles.length ? db.vehicles.map(x => `<section class="card"><div class="vcard"><span class="sicon c-fuel">${I.car}</span><div class="vinfo"><b>${esc(vname(x))}</b><small>${esc(vdesc(x))} · ${fmt(curOdo(x))} mi · ${plural(x.fuel.length, 'fill-up')}</small></div>${x === v ? '<span class="current-badge">Current</span>' : ''}</div>
-      <div class="vactions">${x !== v ? `<button class="btn small primary" data-act="select" data-id="${x.id}">Select</button>` : ''}<button class="btn small" data-act="editVehicle" data-id="${x.id}">${I.edit} Edit</button><button class="btn small" data-act="resetFuelV" data-id="${x.id}" ${x.fuel.length ? '' : 'disabled'}>${I.reset} Reset fuel</button><button class="btn small ghost-danger" data-act="eraseVehicle" data-id="${x.id}">${I.trash} Erase</button></div></section>`).join('') : emptyGarage()}
+      <div class="vactions">${x !== v ? `<button class="btn small primary" data-act="select" data-id="${x.id}">Select</button>` : ''}<button class="btn small" data-act="editVehicle" data-id="${x.id}">${I.edit} Edit</button><button class="btn small" data-act="specsFor" data-id="${x.id}">${I.car} Specs</button><button class="btn small" data-act="resetFuelV" data-id="${x.id}" ${x.fuel.length ? '' : 'disabled'}>${I.reset} Reset fuel</button><button class="btn small ghost-danger" data-act="eraseVehicle" data-id="${x.id}">${I.trash} Erase</button></div></section>`).join('') : emptyGarage()}
     <section class="card"><h3>Settings &amp; backup</h3>
       <div class="setting"><b>Appearance</b><div class="seg" role="radiogroup">${['auto', 'light', 'dark'].map(t => `<label><input type="radio" name="theme" value="${t}" ${db.settings.theme === t ? 'checked' : ''} data-act="theme"><span>${t[0].toUpperCase() + t.slice(1)}</span></label>`).join('')}</div></div>
       <div class="setting"><b>Backup</b><small>Your data lives only in this browser. Export a backup now and then, and import it to move to another device.</small>
@@ -896,6 +964,310 @@ function viewProgram(key) {
       <div class="insights-note">Last checked ${esc(LIB_CHECKED)} from the official program page${url ? ` (${esc(url.replace(/^https?:\/\//, '').replace(/\/$/, ''))})` : ''}. Offers, limits, and participating locations change, so verify before relying on them.</div></section>` : ''}`;
 }
 
+
+/* ======================= v2: VIN lookup, specs, EPA, reminders ======================= */
+const VIN_VAL = { A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, J: 1, K: 2, L: 3, M: 4, N: 5, P: 7, R: 9, S: 2, T: 3, U: 4, V: 5, W: 6, X: 7, Y: 8, Z: 9 };
+const VIN_W = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2];
+function vinCheck(vin) {
+  vin = String(vin || '').trim().toUpperCase();
+  if (vin.length !== 17) return { valid: false, msg: `A VIN has 17 characters. This one has ${vin.length}.` };
+  if (/[IOQ]/.test(vin)) return { valid: false, msg: 'VINs never contain the letters I, O, or Q. Check for 1 and 0 instead.' };
+  if (!/^[A-Z0-9]{17}$/.test(vin)) return { valid: false, msg: 'A VIN can only contain letters and numbers.' };
+  const sumv = [...vin].reduce((t, c, i) => t + (/\d/.test(c) ? Number(c) : VIN_VAL[c]) * VIN_W[i], 0);
+  const r = sumv % 11, cd = r === 10 ? 'X' : String(r);
+  if (vin[8] !== cd) return { valid: true, checkOk: false, msg: `Heads up: the check digit (9th character) should be ${cd}. That usually means a typo, though some non-North-American VINs don’t use a check digit.` };
+  return { valid: true, checkOk: true, msg: '' };
+}
+async function fetchJSON(url, ms = 15000) {
+  if (navigator.onLine === false) throw new Error('offline');
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: c.signal, headers: { Accept: 'application/json' } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const txt = await r.text(); return txt && txt.trim() !== 'null' ? JSON.parse(txt) : null;
+  } catch (e) { if (e.name === 'AbortError') throw new Error('timeout'); if (e instanceof TypeError) throw new Error(navigator.onLine === false ? 'offline' : 'network'); throw e; }
+  finally { clearTimeout(t); }
+}
+const netMsg = e => e.message === 'offline' ? 'You’re offline. Connect to the internet to look this up, or type the details in yourself.'
+  : e.message === 'timeout' ? 'The lookup timed out. Try again in a moment, or type the details in yourself.'
+  : e.message === 'network' ? 'Couldn’t reach the lookup service. Check your connection, or type the details in yourself.'
+  : `Lookup didn’t work (${e.message}). You can still type the details in yourself.`;
+const UPPER_MAKES = ['BMW', 'GMC', 'MINI', 'FIAT', 'RAM', 'KIA', 'BYD', 'VPG', 'AM'];
+const titleCase = s => !s ? '' : String(s).toLowerCase().replace(/(^|[\s-])([a-z])/g, (m, a, b) => a + b.toUpperCase()).split(' ').map(w => UPPER_MAKES.includes(w.toUpperCase()) && w.length <= 4 ? w.toUpperCase() : w).join(' ');
+async function decodeVin(vin) {
+  const j = await fetchJSON(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended/${encodeURIComponent(vin)}?format=json`);
+  const d = j?.Results?.[0];
+  if (!d || !d.Make) throw new Error(d?.ErrorText ? d.ErrorText.split(';')[0] : 'no match');
+  const g = k => (d[k] && String(d[k]).trim() && d[k] !== 'Not Applicable') ? String(d[k]).trim() : '';
+  const displ = num(g('DisplacementL'));
+  const engine = [displ ? `${displ.toFixed(1)} L` : '', g('EngineCylinders') ? `${g('EngineCylinders')} cyl` : '', g('EngineConfiguration'), /yes/i.test(g('Turbo')) ? 'Turbo' : '', g('EngineModel')].filter(Boolean).join(' · ');
+  const trans = [g('TransmissionStyle'), g('TransmissionSpeeds') ? `${g('TransmissionSpeeds')}-speed` : ''].filter(Boolean).join(', ');
+  const fuel = [g('FuelTypePrimary'), g('FuelTypeSecondary') ? `/ ${g('FuelTypeSecondary')}` : '', g('ElectrificationLevel')].filter(Boolean).join(' ');
+  const fields = { year: g('ModelYear'), make: titleCase(g('Make')), model: g('Model'), trim: [g('Trim'), g('Series')].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join(' '), engine, fuelType: fuel, drive: g('DriveType'), body: g('BodyClass'), transmission: trans };
+  const raw = { checked: todayISO(), displ, cylinders: num(g('EngineCylinders')), engineModel: g('EngineModel'), turbo: /yes/i.test(g('Turbo')), fuelPrimary: g('FuelTypePrimary'), plant: [g('PlantCity'), g('PlantCountry')].filter(Boolean).join(', '), gvwr: g('GVWR'), doors: g('Doors'), errorCode: g('ErrorCode') };
+  const code = String(d.ErrorCode || '0');
+  const note = code !== '0' && d.ErrorText ? d.ErrorText.replace(/^\d+ - /, '').split(';')[0] : '';
+  return { fields, raw, note };
+}
+
+/* ---- fueleconomy.gov (EPA) ---- */
+const FE = 'https://www.fueleconomy.gov/ws/rest/vehicle';
+const menu = j => { const m = j?.menuItem; return !m ? [] : Array.isArray(m) ? m : [m]; };
+const normS = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function bestModel(models, model) {
+  const t = normS(model); let best = null, bs = -1;
+  models.forEach(m => { const c = normS(m.value); let sc = c === t ? 1000 : c.startsWith(t) ? 500 - (c.length - t.length) : t.startsWith(c) ? 300 - (t.length - c.length) : c.includes(t) ? 100 : 0; if (/hybrid|plug|fcv|electric|awd|4wd/.test(c) && !/hybrid|plug|fcv|electric|awd|4wd/.test(t)) sc -= 40; if (sc > bs) { bs = sc; best = m; } });
+  return bs > 0 ? best : null;
+}
+function bestOption(opts, v) {
+  const r = v.vpic || {}, tr = String(v.transmission || '').toLowerCase();
+  let best = opts[0] || null, bs = -1;
+  opts.forEach(o => { const t = o.text.toLowerCase(); let sc = 0;
+    if (r.displ && t.includes(`${r.displ.toFixed(1)} l`)) sc += 5;
+    if (r.cylinders && t.includes(`${r.cylinders} cyl`)) sc += 3;
+    if (r.turbo === !!/turbo/.test(t)) sc += 1;
+    if (/cvt|continuously/.test(tr) && /variable|av/.test(t)) sc += 2;
+    if (/manual/.test(tr) === /man /.test(t)) sc += 1;
+    if (sc > bs) { bs = sc; best = o; } });
+  return best;
+}
+const gradeFromEpa = f => /premium/i.test(f || '') ? 'Premium recommended' : /midgrade/i.test(f || '') ? 'Midgrade (89)' : /regular/i.test(f || '') ? 'Regular (87)' : /diesel/i.test(f || '') ? 'Diesel' : /e85/i.test(f || '') ? 'E85 capable' : '';
+function epaLookup(v) {
+  const d = $('#sheet'), form = $('#sheetForm');
+  form.innerHTML = `<div class="sheet-head"><h3>EPA fuel economy</h3><button type="button" class="icon-btn" data-close aria-label="Close">${I.close}</button></div>
+    <div class="sheet-body"><div class="hint">Matches your vehicle in fueleconomy.gov (U.S. EPA / DOE). Pick the version that matches your engine and transmission.</div>
+    <label class="field half"><span class="lbl">Year</span><input type="number" inputmode="numeric" name="year" value="${esc(v.year)}"></label>
+    <label class="field half"><span class="lbl">Make</span><select name="make" disabled><option>Loading…</option></select></label>
+    <label class="field"><span class="lbl">Model</span><select name="model" disabled><option>—</option></select></label>
+    <label class="field"><span class="lbl">Engine / transmission</span><select name="opt" disabled><option>—</option></select></label>
+    <div class="field hint" id="epaMsg" role="status" aria-live="polite"></div></div>
+    <div class="sheet-foot"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn primary" id="epaSave" disabled>${I.check} Use this rating</button></div>`;
+  const msg = t => { $('#epaMsg', form).textContent = t; };
+  const fill = (sel, items, pick) => { sel.innerHTML = items.map(i => `<option value="${esc(i.value)}">${esc(i.text)}</option>`).join(''); sel.disabled = !items.length; if (pick) sel.value = pick.value; };
+  const E = form.elements;
+  const loadOpts = async () => { $('#epaSave').disabled = true; fill(E.opt, []); if (!E.model.value) return; msg('Loading versions…');
+    try { const o = menu(await fetchJSON(`${FE}/menu/options?year=${E.year.value}&make=${encodeURIComponent(E.make.value)}&model=${encodeURIComponent(E.model.value)}`)); fill(E.opt, o, bestOption(o, v)); $('#epaSave').disabled = !o.length; msg(o.length ? 'Check the highlighted version, then tap “Use this rating”.' : 'No versions listed for this model.'); } catch (e) { msg(netMsg(e)); } };
+  const loadModels = async () => { fill(E.model, []); fill(E.opt, []); if (!E.make.value) return; msg('Loading models…');
+    try { const m = menu(await fetchJSON(`${FE}/menu/model?year=${E.year.value}&make=${encodeURIComponent(E.make.value)}`)); fill(E.model, m, bestModel(m, v.model)); await loadOpts(); } catch (e) { msg(netMsg(e)); } };
+  const loadMakes = async () => { msg('Loading makes…'); fill(E.make, []); fill(E.model, []); fill(E.opt, []);
+    try { const m = menu(await fetchJSON(`${FE}/menu/make?year=${E.year.value}`)); if (!m.length) { msg('No EPA data for that year.'); return; } fill(E.make, m, m.find(x => normS(x.value) === normS(v.make))); await loadModels(); } catch (e) { msg(netMsg(e)); } };
+  form.onchange = e => { if (e.target.name === 'year') loadMakes(); if (e.target.name === 'make') loadModels(); if (e.target.name === 'model') loadOpts(); };
+  form.oninput = null;
+  form.onclick = e => { if (e.target.closest('[data-close]')) { e.preventDefault(); d.close(); } };
+  form.onsubmit = async e => { e.preventDefault(); const id = E.opt.value; if (!id) return; $('#epaSave').disabled = true; msg('Saving…');
+    try { const x = await fetchJSON(`${FE}/${encodeURIComponent(id)}`);
+      v.epa = { id, checked: todayISO(), year: x.year, make: x.make, model: x.model, option: E.opt.selectedOptions[0]?.text || '', city: num(x.city08), hwy: num(x.highway08), comb: num(x.comb08), fuelType: x.fuelType || '', fuelType1: x.fuelType1 || '', drive: x.drive || '', trany: x.trany || '', vclass: x.VClass || '' };
+      if (!v.specs.fuelGrade && gradeFromEpa(v.epa.fuelType1 || v.epa.fuelType)) { v.specs.fuelGrade = gradeFromEpa(v.epa.fuelType1 || v.epa.fuelType); v.specs.fuelGradeSrc = 'EPA'; }
+      save(); d.close(); render(); toast('EPA rating saved');
+    } catch (err) { msg(netMsg(err)); $('#epaSave').disabled = false; } };
+  d.onclick = e => { if (e.target === d) d.close(); };
+  d.showModal(); loadMakes();
+}
+
+/* ---- owner's-manual specs (user entered; nothing guessed) ---- */
+const SPEC_GROUPS = [
+  { id: 'fuel', title: 'Fuel', q: 'recommended fuel octane', where: 'Owner’s manual “Fuel” section, or the label inside the fuel door. EPA data says Regular or Premium but not whether premium is required.',
+    fields: [{ k: 'fuelGrade', l: 'Recommended fuel', t: 'select', opts: ['', 'Regular (87)', 'Midgrade (89)', 'Premium recommended', 'Premium required', 'E85 capable', 'Diesel'], half: 1 }, { k: 'minOctane', l: 'Minimum octane', t: 'num', step: 1, half: 1 }] },
+  { id: 'oil', title: 'Engine oil', q: 'oil capacity with filter and oil viscosity', where: 'Owner’s manual “Specifications / Capacities” and the maintenance schedule. Viscosity is often printed on the oil filler cap.',
+    fields: [{ k: 'oilViscosity', l: 'Viscosity', t: 'text', half: 1, ph: 'e.g. 0W-20' }, { k: 'oilCapacity', l: 'Capacity with filter', t: 'num', unit: 'qts', step: 0.1, half: 1 }, { k: 'oilType', l: 'Oil type', t: 'select', opts: ['', 'Synthetic', 'Blend', 'Conventional', 'High mileage'], half: 1 }, { k: 'oilFilter', l: 'Filter part #', t: 'text', half: 1 }, { k: 'oilIntMiles', l: 'Change every', t: 'num', unit: 'mi', step: 1, half: 1 }, { k: 'oilIntMonths', l: 'or every', t: 'num', unit: 'months', step: 1, half: 1 }] },
+  { id: 'tires', title: 'Tires', q: 'tire size and recommended tire pressure', where: 'The tire placard on the driver’s door jamb has the recommended cold PSI and original size. Don’t use the “max PSI” on the tire sidewall.',
+    fields: [{ k: 'tireSize', l: 'Size (front)', t: 'text', half: 1, ph: '225/50R17' }, { k: 'tireSizeRear', l: 'Size (rear, if different)', t: 'text', half: 1 }, { k: 'psiFront', l: 'Front pressure', t: 'num', unit: 'PSI', step: 1, half: 1 }, { k: 'psiRear', l: 'Rear pressure', t: 'num', unit: 'PSI', step: 1, half: 1 }, { k: 'rotateMiles', l: 'Rotate every', t: 'num', unit: 'mi', step: 1, half: 1 }] },
+  { id: 'plugs', title: 'Spark plugs', q: 'spark plug part number and gap', where: 'Owner’s manual specifications or maintenance schedule. A parts-store lookup by vehicle also works.',
+    fields: [{ k: 'plugPart', l: 'Plug part #', t: 'text', half: 1 }, { k: 'plugType', l: 'Plug type', t: 'select', opts: ['', 'Copper', 'Platinum', 'Double platinum', 'Iridium'], half: 1 }, { k: 'plugGap', l: 'Gap', t: 'num', unit: 'in', step: 0.001, half: 1 }, { k: 'plugIntMiles', l: 'Replace every', t: 'num', unit: 'mi', step: 1, half: 1 }] },
+  { id: 'coolant', title: 'Coolant', q: 'coolant type and change interval', where: 'Owner’s manual “Capacities / Fluids”. The required type is often printed on the coolant reservoir or radiator cap.',
+    fields: [{ k: 'coolantType', l: 'Type', t: 'select', opts: ['', 'OAT', 'HOAT', 'P-HOAT', 'Si-OAT', 'IAT', 'Universal', 'Other'], half: 1 }, { k: 'coolantSpec', l: 'Spec / brand', t: 'text', half: 1, ph: 'e.g. Honda Type 2' }, { k: 'coolantIntMiles', l: 'Flush every', t: 'num', unit: 'mi', step: 1, half: 1 }, { k: 'coolantIntMonths', l: 'or every', t: 'num', unit: 'months', step: 1, half: 1 }] },
+  { id: 'battery', title: 'Battery', q: 'battery group size and CCA', where: 'The label on top of your current battery, or the owner’s manual.',
+    fields: [{ k: 'batteryGroup', l: 'Group size', t: 'text', half: 1, ph: 'e.g. 51R' }, { k: 'batteryCca', l: 'Minimum CCA', t: 'num', step: 1, half: 1 }] },
+  { id: 'brakes', title: 'Brakes', q: 'brake fluid type and brake pad minimum thickness', where: 'Brake fluid type is on the master-cylinder reservoir cap. Pad and rotor minimums are in the service manual, and the rotor minimum is often stamped on the rotor.',
+    fields: [{ k: 'brakeFluid', l: 'Brake fluid', t: 'select', opts: ['', 'DOT 3', 'DOT 4', 'DOT 5.1', 'DOT 5'], half: 1 }, { k: 'padMinMm', l: 'Pad minimum', t: 'num', unit: 'mm', step: 0.5, half: 1 }, { k: 'rotorMinFront', l: 'Front rotor minimum', t: 'num', unit: 'mm', step: 0.1, half: 1 }, { k: 'brakeIntMiles', l: 'Inspect every', t: 'num', unit: 'mi', step: 1, half: 1 }] },
+];
+const specFieldsAll = SPEC_GROUPS.flatMap(g => g.fields);
+const searchUrl = (v, q) => `https://www.google.com/search?q=${encodeURIComponent(`${[v.year, v.make, v.model].filter(Boolean).join(' ')} owner's manual ${q}`)}`;
+const psiTargets = v => { const f = num(v.specs?.psiFront), r = num(v.specs?.psiRear) || f; return { fl: f, fr: f, rl: r, rr: r }; };
+function specDefaults(secId, v, values) {
+  const sp = v.specs || {}, o = {};
+  if (secId === 'oil') { if (sp.oilViscosity) o.viscosity = sp.oilViscosity; if (num(sp.oilCapacity)) o.qty = num(sp.oilCapacity); if (sp.oilType && !values.oilType) o.oilType = sp.oilType; if (sp.oilFilter && !values.filterPart) o.filterPart = sp.oilFilter; if (num(sp.oilIntMiles)) o.intMiles = num(sp.oilIntMiles); if (num(sp.oilIntMonths)) o.intMonths = num(sp.oilIntMonths); }
+  if (secId === 'coolant') { if (sp.coolantType) o.ctype = sp.coolantType; if (sp.coolantSpec && !values.brand) o.brand = sp.coolantSpec; if (num(sp.coolantIntMiles)) o.intMiles = num(sp.coolantIntMiles); if (num(sp.coolantIntMonths)) o.intMonths = num(sp.coolantIntMonths); }
+  if (secId === 'plugs') { if (sp.plugPart) o.part = sp.plugPart; if (sp.plugType) o.ptype = sp.plugType; if (num(sp.plugGap)) o.gap = num(sp.plugGap); if (num(sp.plugIntMiles)) o.intMiles = num(sp.plugIntMiles); if (num(v.vpic?.cylinders)) o.qty = num(v.vpic.cylinders); }
+  if (secId === 'tires') { if (sp.tireSize && !values.size) o.size = sp.tireSize; if (num(sp.rotateMiles)) o.intMiles = num(sp.rotateMiles); }
+  if (secId === 'battery') { if (sp.batteryGroup) o.group = sp.batteryGroup; if (num(sp.batteryCca)) o.cca = num(sp.batteryCca); }
+  if (secId === 'brakes') { if (sp.brakeFluid) o.fluidType = sp.brakeFluid; if (num(sp.brakeIntMiles)) o.intMiles = num(sp.brakeIntMiles); }
+  return o;
+}
+const normVisc = s => String(s || '').toUpperCase().replace(/\s|-/g, '');
+function specWarnings(secId, vals, v) {
+  const sp = v.specs || {}, w = [];
+  if (secId === 'fuel') { const o = vals.octane === 'Other' ? num(vals.octaneOther) : num(vals.octane); if (num(sp.minOctane) && o != null && o < num(sp.minOctane)) w.push(`${o} octane is below the ${num(sp.minOctane)} in your specs${sp.fuelGrade ? ` (${sp.fuelGrade})` : ''}.`); }
+  if (secId === 'oil') { if (sp.oilViscosity && vals.viscosity && normVisc(vals.viscosity) !== normVisc(sp.oilViscosity)) w.push(`${vals.viscosity} differs from the ${sp.oilViscosity} in your specs.`); if (num(sp.oilCapacity) && vals.qty != null && Math.abs(vals.qty - num(sp.oilCapacity)) > 0.5) w.push(`${vals.qty} qt differs from the ${num(sp.oilCapacity)} qt capacity in your specs.`); }
+  if (secId === 'tires') { const t = psiTargets(v); if (vals.psi) TIRE_POS.forEach(([k, l]) => { const p = num(vals.psi[k]); if (p != null && t[k]) { if (p < t[k] - 1) w.push(`${l} ${p} PSI is below the ${t[k]} PSI spec.`); else if (p > t[k] + 4) w.push(`${l} ${p} PSI is well above the ${t[k]} PSI spec.`); } });
+    if (sp.tireSize && vals.size && has(vals.services, 'New tires') && normS(vals.size) !== normS(sp.tireSize) && normS(vals.size) !== normS(sp.tireSizeRear)) w.push(`Size ${vals.size} differs from the ${sp.tireSize} in your specs.`);
+    if (vals.tread) { const mn = Math.min(...TIRE_POS.map(([k]) => num(vals.tread[k])).filter(x => x != null)); if (isFinite(mn) && mn <= 2) w.push(`Tread at ${mn}/32 is at the legal minimum in most states. Replace these tires.`); } }
+  if (secId === 'plugs') { if (num(sp.plugGap) && vals.gap != null && Math.abs(vals.gap - num(sp.plugGap)) > 0.0025) w.push(`Gap ${vals.gap}" differs from the ${num(sp.plugGap)}" spec.`); if (sp.plugType && vals.ptype && vals.ptype !== sp.plugType) w.push(`${vals.ptype} plugs differ from the ${sp.plugType} type in your specs.`); }
+  if (secId === 'coolant') { if (sp.coolantType && vals.ctype && vals.ctype !== sp.coolantType && vals.ctype !== 'Universal') w.push(`${vals.ctype} differs from the ${sp.coolantType} coolant in your specs. Mixing coolant types can cause problems.`); }
+  if (secId === 'battery') { if (sp.batteryGroup && vals.group && normS(vals.group) !== normS(sp.batteryGroup)) w.push(`Group ${vals.group} differs from the ${sp.batteryGroup} in your specs.`); if (num(sp.batteryCca) && vals.cca != null && vals.cca < num(sp.batteryCca)) w.push(`${vals.cca} CCA is below the ${num(sp.batteryCca)} CCA spec.`); if (vals.resting != null && vals.resting < 12.4) w.push(`${vals.resting} V resting is low (a healthy battery reads about 12.6 V).`); }
+  if (secId === 'brakes') { if (num(sp.padMinMm) && vals.thickness != null && vals.thickness <= num(sp.padMinMm)) w.push(`${vals.thickness} mm is at or below the ${num(sp.padMinMm)} mm pad minimum.`); if (sp.brakeFluid && vals.fluidType && vals.fluidType !== sp.brakeFluid) w.push(`${vals.fluidType} differs from the ${sp.brakeFluid} in your specs.`); }
+  return w;
+}
+function specForm(v, gid) {
+  if (!v.specs) v.specs = {};
+  const g = SPEC_GROUPS.find(x => x.id === gid);
+  openForm({ title: `${g.title} specs`, fields: [{ k: 'h0', t: 'hint', l: `Where to find this: ${g.where}` }, ...g.fields], values: { ...v.specs }, saveLabel: 'Save specs',
+    onSave: vals => { delete vals.h0; Object.assign(v.specs, vals); if (gid === 'fuel') v.specs.fuelGradeSrc = 'you'; toast(`${g.title} specs saved`); } });
+}
+const specVal = (f, val) => val == null || val === '' ? '<span class="muted">Not set</span>' : esc(`${val}${f.unit ? ' ' + f.unit : ''}`);
+function viewSpecs(v) {
+  if (!v.specs) v.specs = {};
+  const vp = v.vpic, e = v.epa, s = fuelStats(v);
+  const row = (l, val) => `<div><span>${esc(l)}</span>${val ? esc(val) : '<span class="muted">—</span>'}</div>`;
+  return `<a href="#/dash" class="back">${I.back} Dashboard</a>
+    <div class="page-title"><h2>Specs</h2><span class="muted">${esc(vname(v))}</span></div>
+    <section class="card"><div class="card-head"><h3>${I.car} Vehicle details</h3><span class="tag">${vp ? 'NHTSA vPIC' : 'Manual'}</span></div>
+      <div class="spec">${row('VIN', v.vin)}${row('Year / make / model', [v.year, v.make, v.model].filter(Boolean).join(' '))}${row('Trim', v.trim)}${row('Engine', v.engine)}${row('Fuel type', v.fuelType)}${row('Drive', v.drive)}${row('Body', v.body)}${row('Transmission', v.transmission)}</div>
+      <div class="row-actions"><button class="btn" data-act="vinLookup" data-id="${v.id}">${I.search} ${v.vin ? 'Re-run VIN lookup' : 'Look up by VIN'}</button>${v.vin && vinCheck(v.vin).valid ? `<a class="btn" href="https://www.nhtsa.gov/recalls?vin=${encodeURIComponent(v.vin)}" target="_blank" rel="noopener noreferrer">${I.link} Recalls</a>` : ''}</div>
+      ${vp?.checked ? `<div class="insights-note">Decoded from NHTSA vPIC on ${fdate(vp.checked)}. NHTSA only fills fields the manufacturer reported.</div>` : ''}</section>
+    <section class="card"><div class="card-head"><h3>${I.gauge} EPA fuel economy</h3><span class="tag">fueleconomy.gov</span></div>
+      ${e ? `<div class="stats">${stat('City', fmt(e.city), 'mpg')}${stat('Highway', fmt(e.hwy), 'mpg')}${stat('Combined', fmt(e.comb), 'mpg')}</div>
+        <div class="spec" style="margin-top:12px">${row('EPA fuel', e.fuelType1 || e.fuelType)}${row('Your average', s.avgMpg ? `${fmt(s.avgMpg, 1)} mpg (${s.avgMpg >= e.comb ? '+' : ''}${fmt((s.avgMpg - e.comb) / e.comb * 100, 0)}% vs combined)` : 'Log 2 full fills')}<div class="wide"><span>Matched version</span>${esc(`${e.year} ${e.make} ${e.model} · ${e.option}`)}</div></div>
+        <div class="row-actions"><button class="btn" data-act="epa" data-id="${v.id}">Change match</button><a class="btn" href="https://www.fueleconomy.gov/feg/noframes/${encodeURIComponent(e.id)}.shtml" target="_blank" rel="noopener noreferrer">${I.link} EPA page</a></div>`
+      : `<p class="muted" style="margin:0 0 12px">Get the official city, highway, and combined MPG and the recommended fuel, then compare them with your real-world MPG.</p><button class="btn primary block" data-act="epa" data-id="${v.id}">${I.search} Find EPA rating</button>`}</section>
+    <section class="card"><div class="card-head"><h3>${I.wrench} Owner’s manual specs</h3><a class="link" style="margin:0" href="${searchUrl(v, 'pdf')}" target="_blank" rel="noopener noreferrer">Find manual</a></div>
+      <p class="muted" style="margin:0 0 6px;font-size:.88rem">No free database reliably provides these, so AutoLog doesn’t guess. Enter them from your owner’s manual or door jamb, and they’ll pre-fill your service forms and flag mismatches.</p>
+      ${SPEC_GROUPS.map(g => `<div class="specgrp"><div class="card-head" style="margin:0 0 8px"><b>${esc(g.title)}${g.id === 'fuel' && v.specs.fuelGradeSrc === 'EPA' ? ' <span class="tag">from EPA</span>' : ''}</b><button class="btn small" data-act="specEdit" data-id="${g.id}">${I.edit} Edit</button></div>
+        <div class="spec">${g.fields.map(f => `<div><span>${esc(f.l)}</span>${specVal(f, v.specs[f.k])}</div>`).join('')}</div>
+        <details class="where"><summary>Where to find this</summary><p>${esc(g.where)}</p><a href="${searchUrl(v, g.q)}" target="_blank" rel="noopener noreferrer">${I.search} Search “${esc([v.year, v.make, v.model].filter(Boolean).join(' '))} ${esc(g.q)}”</a></details></div>`).join('')}
+    </section>`;
+}
+
+/* ---- reminders ---- */
+function reminderItems(v) {
+  const out = [], s = fuelStats(v), mpd = s.milesPerDay, odo = curOdo(v), today = todayISO();
+  const push = (secId, title, a) => {
+    if (!a) return; const st = intervalStatus(a, v); if (st.dueOdo == null && !st.dueDate) return;
+    const est = st.dueOdo != null && mpd ? addDays(today, Math.max(0, (st.dueOdo - odo) / mpd)) : null;
+    const eff = [est, st.dueDate].filter(Boolean).sort()[0] || null;
+    let level = st.level; if (level === 'ok' && eff && daysBetween(today, eff) <= 14) level = 'soon';
+    out.push({ key: `${v.id}:${secId}:${title}`, vid: v.id, vname: vname(v), sec: secId, title, level, dueOdo: st.dueOdo, milesLeft: st.dueOdo != null ? st.dueOdo - odo : null, dueDate: st.dueDate, estDate: est, effDate: eff });
+  };
+  const L = id => entries(v, id);
+  push('oil', 'Oil change', L('oil')[0]);
+  push('coolant', 'Coolant flush', SEC.coolant.anchor(L('coolant')));
+  ['Front', 'Rear'].forEach(ax => push('brakes', `${ax} brake inspection`, L('brakes').find(e => e.axle === ax || e.axle === 'Both')));
+  push('tires', 'Tire rotation', SEC.tires.anchor(L('tires')));
+  push('plugs', 'Spark plugs', L('plugs')[0]);
+  const b = batteryCur(v), exp = wExp(b);
+  if (exp && exp >= today) { const dl = daysBetween(today, exp); out.push({ key: `${v.id}:battery:warranty`, vid: v.id, vname: vname(v), sec: 'battery', title: 'Battery warranty ends', level: dl <= 60 ? 'soon' : 'ok', dueDate: exp, effDate: exp, info: true }); }
+  return out;
+}
+const allReminders = () => db.vehicles.flatMap(reminderItems).sort((a, b) => RANK[b.level] - RANK[a.level] || (a.effDate || '9').localeCompare(b.effDate || '9'));
+const dueNow = () => allReminders().filter(i => i.level === 'over' || i.level === 'soon');
+function reminderText(i) {
+  if (i.info) return `Warranty ends ${fdate(i.dueDate)}`;
+  const parts = [];
+  if (i.dueOdo != null) parts.push(`at ${fmt(i.dueOdo)} mi${i.milesLeft != null ? ` (${i.milesLeft <= 0 ? fmt(-i.milesLeft) + ' mi overdue' : fmt(i.milesLeft) + ' mi left'}${i.estDate && i.milesLeft > 0 ? `, about ${fdate(i.estDate)}` : ''})` : ''}`);
+  if (i.dueDate) parts.push(`by ${fdate(i.dueDate)}`);
+  return 'Due ' + parts.join(' or ');
+}
+function viewReminders() {
+  const items = allReminders(), groups = [['over', 'Overdue'], ['soon', 'Due soon'], ['ok', 'Upcoming']];
+  const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+  return `<div class="page-title"><h2>Reminders</h2>${items.length ? `<button class="btn small" data-act="icsAll">${I.download} Add all to calendar</button>` : ''}</div>
+    <section class="card"><h3>🔔 Notifications</h3>
+      ${perm === 'granted' ? `<p style="margin:0">On. AutoLog notifies you when you open the app and something is due${typeof ServiceWorkerRegistration !== 'undefined' && 'periodicSync' in ServiceWorkerRegistration.prototype ? ', and your browser may also check in the background now and then' : ''}.</p><div class="row-actions"><button class="btn small" data-act="testNotify">Send a test notification</button></div>`
+        : perm === 'denied' ? '<p style="margin:0" class="muted">Notifications are blocked for this site. Turn them on in your browser or phone settings. Calendar alerts below work either way.</p>'
+        : perm === 'unsupported' ? '<p style="margin:0" class="muted">This browser doesn’t support web notifications. On iPhone, add AutoLog to your Home Screen first (Share → Add to Home Screen) and open it from there. Calendar alerts work everywhere.</p>'
+        : `<p style="margin:0 0 12px">Get a heads-up when service is due. AutoLog checks when you open it. For alerts that fire even if the app is closed, use <b>Add to calendar</b>.</p><button class="btn primary block" data-act="enableNotify">Turn on notifications</button>`}
+    </section>
+    ${items.length ? groups.map(([lv, label]) => { const g = items.filter(i => i.level === lv); return g.length ? `<section class="card"><div class="card-head"><h3>${esc(label)}</h3><span class="pill ${lv}">${g.length}</span></div><div class="list">${g.map(i => `
+      <div class="entry rem"><span class="sicon c-${i.sec}">${SEC[i.sec].icon}</span><div class="e-main"><b>${esc(i.title)}</b><div class="e-sub">${esc(i.vname)}</div><div class="e-sub">${esc(reminderText(i))}</div>
+        <div class="btn-row" style="margin-top:8px"><button class="btn small" data-act="icsOne" data-key="${esc(i.key)}">${I.download} Add to calendar</button>${i.info ? '' : `<button class="btn small" data-act="logRem" data-key="${esc(i.key)}">${I.plus} Log it</button>`}</div></div></div>`).join('')}</div></section>` : ''; }).join('')
+      : `<div class="card empty">Nothing scheduled yet. Log oil changes, rotations, and other services with a “next due” interval, and reminders show up here.</div>`}
+    <p class="muted" style="font-size:.8rem;text-align:center">Mileage-based due dates are estimated from your average ${'miles per day'} in the fuel log.</p>`;
+}
+/* .ics with alarms (RFC 5545) */
+function icsFold(line) { const out = []; let cur = ''; for (const ch of line) { if (new TextEncoder().encode(cur + ch).length > 74) { out.push(cur); cur = ' ' + ch; } else cur += ch; } out.push(cur); return out.join('\r\n'); }
+function icsFor(items) {
+  const e = t => String(t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  const dt = d => d.replace(/-/g, ''), today = todayISO();
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AutoLog//Reminders//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:AutoLog'];
+  items.forEach(i => {
+    const day = i.effDate && i.effDate > today ? i.effDate : today;
+    L.push('BEGIN:VEVENT', `UID:${i.key.replace(/[^\w-]/g, '-')}@autolog.app`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${dt(day)}`, `DTEND;VALUE=DATE:${dt(addDays(day, 1))}`,
+      `SUMMARY:${e(`${i.title}: ${i.vname}`)}`, `DESCRIPTION:${e(`${reminderText(i)}.\nFrom AutoLog.`)}`, 'TRANSP:TRANSPARENT',
+      'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${e(i.title)}`, 'TRIGGER:-PT15H', 'END:VALARM',
+      'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${e(i.title)}`, 'TRIGGER:PT9H', 'END:VALARM', 'END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.map(icsFold).join('\r\n') + '\r\n';
+}
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+async function deliverIcs(name, text) {
+  const file = typeof File === 'function' ? new File([text], name, { type: 'text/calendar' }) : null;
+  if (isIOS()) {
+    // iOS Safari opens text/calendar data URLs in its “Add to Calendar” sheet; in a Home Screen app, the share sheet is more reliable.
+    if (navigator.standalone && file && navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file], title: 'AutoLog reminder' }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+    location.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(text); return;
+  }
+  download(name, text, 'text/calendar;charset=utf-8'); toast('Calendar file downloaded. Open it to add the event and alarm.');
+}
+/* badge, banner, notifications */
+const NKEY = 'autolog:notified';
+function updateBadge() {
+  const n = dueNow().length, c = $('#bellCount');
+  if (c) { c.hidden = !n; c.textContent = n > 9 ? '9+' : String(n); }
+  try { if ('setAppBadge' in navigator) { n ? navigator.setAppBadge(n).catch(() => {}) : navigator.clearAppBadge().catch(() => {}); } } catch (e) { /* unsupported */ }
+}
+function syncSnapshot() {
+  if (!('caches' in window) || !/^https?:$/.test(location.protocol)) return;
+  const items = allReminders().filter(i => !i.info).map(i => ({ key: i.key, title: i.title, vname: i.vname, effDate: i.effDate, text: reminderText(i) }));
+  caches.open('autolog-data').then(c => c.put('./__reminders.json', new Response(JSON.stringify({ at: Date.now(), items }), { headers: { 'Content-Type': 'application/json' } }))).catch(() => {});
+}
+function afterSave() { updateBadge(); syncSnapshot(); }
+async function swRegistration() { try { return 'serviceWorker' in navigator && /^https?:$/.test(location.protocol) ? await navigator.serviceWorker.getRegistration() : null; } catch (e) { return null; } }
+async function notify(title, opts) {
+  const reg = await swRegistration();
+  if (reg && reg.showNotification) return reg.showNotification(title, opts);
+  if ('Notification' in window) return new Notification(title, opts);
+}
+async function checkNotify(force) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return 0;
+  let sent = {}; try { sent = JSON.parse(localStorage.getItem(NKEY) || '{}'); } catch (e) { sent = {}; }
+  const now = Date.now(), due = dueNow().filter(i => force || !sent[i.key] || now - sent[i.key] > 20 * 3600e3);
+  for (const i of due.slice(0, 4)) {
+    try { await notify(`${i.title} ${i.level === 'over' ? 'overdue' : i.info ? 'soon' : 'due soon'}`, { body: `${i.vname}: ${reminderText(i)}`, tag: i.key, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: './#/reminders' } }); sent[i.key] = now; } catch (e) { console.warn('notify failed', e); }
+  }
+  try { localStorage.setItem(NKEY, JSON.stringify(sent)); } catch (e) { /* ignore */ }
+  return due.length;
+}
+async function registerPeriodic() {
+  try { const reg = await swRegistration(); if (!reg || !('periodicSync' in reg)) return false;
+    const st = await navigator.permissions.query({ name: 'periodic-background-sync' }); if (st.state !== 'granted') return false;
+    await reg.periodicSync.register('autolog-reminders', { minInterval: 12 * 3600e3 }); return true; } catch (e) { return false; }
+}
+async function enableNotifications() {
+  if (!('Notification' in window)) { toast('Notifications aren’t supported here'); return; }
+  const p = await Notification.requestPermission();
+  if (p !== 'granted') { toast('Notifications not enabled'); render(); return; }
+  await registerPeriodic(); render();
+  const n = await checkNotify(true); toast(n ? 'Notifications on. You have items due now.' : 'Notifications on. Nothing is due right now.');
+}
+/* service worker + “update available” prompt */
+let swUpdating = false;
+function setupSW() {
+  if (window.AUTOLOG_STANDALONE || !('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    const show = () => { const b = $('#updateBar'); b.hidden = false; b.onclick = () => { swUpdating = true; b.textContent = 'Updating…'; (reg.waiting || reg.installing)?.postMessage({ type: 'SKIP_WAITING' }); setTimeout(() => location.reload(), 4000); }; };
+    if (reg.waiting && navigator.serviceWorker.controller) show();
+    reg.addEventListener('updatefound', () => { const w = reg.installing; if (w) w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) show(); }); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+    setInterval(() => reg.update().catch(() => {}), 3600e3);
+    registerPeriodic();
+  }).catch(err => console.warn('Service worker registration failed', err));
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (swUpdating) location.reload(); });
+  navigator.serviceWorker.addEventListener('message', e => { if (e.data?.type === 'NAV' && e.data.hash) location.hash = e.data.hash; });
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { updateBadge(); checkNotify(); } });
+
 /* ---------- render + routing ---------- */
 let installPrompt = null;
 function render() {
@@ -907,12 +1279,15 @@ function render() {
   let html;
   if (page === 'garage') html = viewGarage();
   else if (page === 'rewards') { html = sub ? viewProgram(sub) : viewRewards(); if (!sub) { fab.hidden = false; fab.setAttribute('aria-label', 'Add rewards program'); fab.onclick = pickLibrary; } }
+  else if (page === 'reminders') html = viewReminders();
   else if (!v) html = emptyGarage();
+  else if (page === 'specs') html = viewSpecs(v);
   else if (page === 'fuel') { html = viewFuel(v); fab.hidden = false; fab.setAttribute('aria-label', 'Log fill-up'); fab.onclick = () => fuelForm(v); }
   else if (page === 'service' && sub && SEC[sub]) { html = viewSection(v, SEC[sub]); fab.hidden = false; fab.setAttribute('aria-label', `Log ${SEC[sub].noun}`); fab.onclick = () => maintForm(v, SEC[sub]); }
   else if (page === 'service') { html = viewService(v); fab.hidden = false; fab.setAttribute('aria-label', 'Log service'); fab.onclick = () => pickService(v); }
   else html = viewDash(v);
   app.innerHTML = html;
+  updateBadge();
 }
 window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
 
@@ -929,6 +1304,16 @@ document.addEventListener('click', e => {
     eraseVehicle: () => eraseVehicle(byId(el.dataset.id)),
     resetFuel: () => resetFuel(v), resetFuelV: () => resetFuel(byId(el.dataset.id)),
     undoReset: () => { delete v.fuelStatsFrom; delete v.fuelResetDate; save(); render(); toast('Reset undone'); },
+    vinLookup: () => addVehicle(byId(el.dataset.id), { autoLookup: true }),
+    epa: () => epaLookup(byId(el.dataset.id)),
+    specEdit: () => specForm(v, el.dataset.id),
+    specsFor: () => { db.settings.current = el.dataset.id; save(); location.hash = '#/specs'; },
+    dismissBanner: () => { sessionStorage.setItem('autolog:bannerDismissed', '1'); render(); },
+    enableNotify: enableNotifications,
+    testNotify: () => notify('AutoLog notifications are working', { body: 'You’ll get a heads-up here when service is due.', tag: 'autolog-test', icon: 'icons/icon-192.png' }).catch(err => toast('Couldn’t show a notification: ' + err.message)),
+    icsAll: () => { const it = allReminders(); if (it.length) deliverIcs(`autolog-reminders-${todayISO()}.ics`, icsFor(it)); },
+    icsOne: () => { const it = allReminders().find(i => i.key === el.dataset.key); if (it) deliverIcs(`autolog-${it.sec}-${todayISO()}.ics`, icsFor([it])); },
+    logRem: () => { const it = allReminders().find(i => i.key === el.dataset.key); if (it) { db.settings.current = it.vid; save(); maintForm(cur(), SEC[it.sec]); } },
     addProgram: pickLibrary, customProgram: () => programForm(null), addLib: () => programForm(el.dataset.id), editProgram: () => programForm(null, progById(el.dataset.id)),
     csv: () => exportCSV(v), export: exportJSON, import: () => $('#importFile').click(),
     theme: () => { db.settings.theme = el.value; save(); applyTheme(); },
@@ -952,9 +1337,9 @@ function applyTheme() {
 }
 const mq = matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', applyTheme);
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; if (location.hash.includes('garage')) render(); });
-if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker registration failed', err));
+setupSW();
 window.addEventListener('storage', e => { if (e.key === KEY) { db = load(); render(); } });
 
-applyTheme(); render();
-window.AutoLog = { stats: () => cur() && fuelStats(cur()), insights: () => cur() && insights(cur(), fuelStats(cur())) };
+applyTheme(); render(); syncSnapshot(); setTimeout(() => checkNotify(), 1500);
+window.AutoLog = { stats: () => cur() && fuelStats(cur()), insights: () => cur() && insights(cur(), fuelStats(cur())), reminders: () => allReminders(), ics: () => icsFor(allReminders()), vinCheck, current: () => cur() };
 })();

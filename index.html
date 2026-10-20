@@ -18,8 +18,10 @@
 <body>
 <header class="topbar">
   <div class="brand"><span class="logo" aria-hidden="true"></span><span>AutoLog</span></div>
-  <button class="vswitch" id="vswitch" data-act="pickVehicle" aria-label="Switch vehicle"><span id="vname">No vehicle</span><svg viewBox="0 0 24 24" class="ic sm"><path d="m6 9 6 6 6-6"/></svg></button>
+  <div class="top-right"><a href="#/reminders" class="bell" id="bell" aria-label="Reminders"><svg viewBox="0 0 24 24" class="ic"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="bell-count" id="bellCount" hidden></span></a>
+  <button class="vswitch" id="vswitch" data-act="pickVehicle" aria-label="Switch vehicle"><span id="vname">No vehicle</span><svg viewBox="0 0 24 24" class="ic sm"><path d="m6 9 6 6 6-6"/></svg></button></div>
 </header>
+<button type="button" class="update-bar" id="updateBar" hidden>Update available, tap to reload</button>
 <main id="app" tabindex="-1"></main>
 <button class="fab" id="fab" aria-label="Add" hidden><svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg></button>
 <nav class="tabbar" id="tabbar">
