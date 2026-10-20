@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AutoLog: Fuel &amp; Maintenance</title>
+<meta name="description" content="Track fill-ups, MPG, and vehicle maintenance. Works offline; your data stays on your device.">
+<meta name="theme-color" content="#f4f6fb" id="themeColor">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AutoLog">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo" aria-hidden="true"></span><span>AutoLog</span></div>
+  <button class="vswitch" id="vswitch" data-act="pickVehicle" aria-label="Switch vehicle"><span id="vname">No vehicle</span><svg viewBox="0 0 24 24" class="ic sm"><path d="m6 9 6 6 6-6"/></svg></button>
+</header>
+<main id="app" tabindex="-1"></main>
+<button class="fab" id="fab" aria-label="Add" hidden><svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg></button>
+<nav class="tabbar" id="tabbar">
+  <a href="#/dash" data-tab="dash"><svg viewBox="0 0 24 24" class="ic"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg><span>Dashboard</span></a>
+  <a href="#/fuel" data-tab="fuel"><svg viewBox="0 0 24 24" class="ic"><path d="M3 22h12M4 9h10M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0V9.83a2 2 0 0 0-.59-1.42L18 5"/></svg><span>Fuel</span></a>
+  <a href="#/service" data-tab="service"><svg viewBox="0 0 24 24" class="ic"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>Service</span></a>
+  <a href="#/rewards" data-tab="rewards"><svg viewBox="0 0 24 24" class="ic"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9H5v-9"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg><span>Rewards</span></a>
+  <a href="#/garage" data-tab="garage"><svg viewBox="0 0 24 24" class="ic"><path d="M3 21V8l9-5 9 5v13"/><path d="M7 21v-6h10v6"/><path d="M7 18h10"/></svg><span>Garage</span></a>
+</nav>
+<dialog id="sheet" class="sheet"><form method="dialog" class="sheet-inner" id="sheetForm" novalidate></form></dialog>
+<dialog id="confirm" class="confirm"><div class="confirm-inner" id="confirmInner"></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+<script src="rewards-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
