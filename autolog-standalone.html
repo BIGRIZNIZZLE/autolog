@@ -2536,7 +2536,7 @@ function sampleVehicle() {
       oil: [oilC(395, 33200, 'Mobil 1', 69.99, 'Valvoline Instant'), oilC(262, 37450, 'Castrol', 38.4), oilC(128, 41700, 'Mobil 1', 41.5), oilC(9, 45000, 'Pennzoil', 36.9)],
       coolant: [m({ date: d(410), odo: 32700, service: 'Drain & fill', ctype: 'OAT', color: 'Blue', brand: 'Honda Type 2', mix: 'Premixed 50/50', qty: 1.5, cost: 129, doneBy: 'Shop', shop: 'Honda dealer', intMiles: 60000, intMonths: 60 })],
       brakes: [
-        m({ date: d(405), odo: 32900, axle: 'Front', padsReplaced: true, padBrand: 'Akebono', padPart: 'ACT1089', padMaterial: 'Ceramic', thickness: 11, rotors: 'Resurfaced', fluid: 'Flush', fluidType: 'DOT 3', cost: 289, doneBy: 'Shop', shop: 'Midas', intMiles: 12000, intMonths: 12 }),
+        m({ date: d(405), odo: 32900, axle: 'Front', padsReplaced: true, padBrand: 'Akebono', padPart: 'ProACT ceramic', padMaterial: 'Ceramic', thickness: 11, rotors: 'Resurfaced', fluid: 'Flush', fluidType: 'DOT 3', cost: 289, doneBy: 'Shop', shop: 'Midas', intMiles: 12000, intMonths: 12 }),
         m({ date: d(262), odo: 37450, axle: 'Both', padsReplaced: false, thickness: 8, rotors: 'Not serviced', fluid: 'None', cost: 0, noCharge: true, doneBy: 'DIY', intMiles: 12000, intMonths: 12 }),
         m({ date: d(66), odo: 43400, axle: 'Both', padsReplaced: false, thickness: 6, rotors: 'Not serviced', fluid: 'None', cost: 0, noCharge: true, doneBy: 'DIY', intMiles: 12000, intMonths: 12, notes: 'Front 6 mm, rear 5 mm. Rotors smooth.' }),
       ],
@@ -2548,17 +2548,17 @@ function sampleVehicle() {
       ],
       plugs: [m({ date: d(170), odo: 40350, brand: 'NGK', part: 'DILKAR7G11GS', ptype: 'Iridium', gap: 0.031, qty: 4, wires: 'None', cost: 58.36, doneBy: 'DIY', intMiles: 100000, intMonths: 120 })],
       battery: [
-        m({ date: d(418), odo: 32500, events: ['New battery'], brand: 'Interstate', model: 'MTX-51R', group: '51R', cca: 500, warranty: 36, resting: 12.71, cranking: 10.6, cost: 189.99, doneBy: 'Shop', shop: 'Costco Tire Center' }),
+        m({ date: d(418), odo: 32500, events: ['New battery'], brand: 'Interstate', model: 'Group 51R AGM', group: '51R', cca: 500, warranty: 36, resting: 12.71, cranking: 10.6, cost: 189.99, doneBy: 'Shop', shop: 'Costco Tire Center' }),
         m({ date: d(400), odo: 33000, events: ['Voltage test'], resting: 12.6, cranking: 10.3, cost: 0, noCharge: true, doneBy: 'DIY' }),
         m({ date: d(35), odo: 44400, events: ['Voltage test', 'Terminals cleaned'], resting: 12.48, cranking: 10.1, cost: 0, noCharge: true, doneBy: 'DIY' }),
       ],
       airFilter: [
-        m({ date: d(392), odo: 33300, action: 'Replaced', condition: 'Dirty', brand: 'FRAM', part: 'CA12360', cost: 18.97, doneBy: 'DIY', intMiles: 15000, intMonths: 12 }),
-        m({ date: d(70), odo: 43300, action: 'Replaced', condition: 'Clogged', brand: 'K&N', part: '33-5079', cost: 54.99, doneBy: 'DIY', intMiles: 50000, intMonths: 60, notes: 'Washable filter' }),
+        m({ date: d(392), odo: 33300, action: 'Replaced', condition: 'Dirty', brand: 'FRAM', part: 'Extra Guard panel filter', cost: 18.97, doneBy: 'DIY', intMiles: 15000, intMonths: 12 }),
+        m({ date: d(70), odo: 43300, action: 'Replaced', condition: 'Clogged', brand: 'Honda', part: '17220-6A0-A00', cost: 24.99, doneBy: 'DIY', intMiles: 15000, intMonths: 12 }),
       ],
       cabinFilter: [
-        m({ date: d(380), odo: 33600, action: 'Replaced', condition: 'Dirty', brand: 'FRAM', part: 'CF11182', cost: 15.47, doneBy: 'DIY', intMiles: 15000, intMonths: 12 }),
-        m({ date: d(25), odo: 44700, action: 'Replaced', condition: 'Dirty', brand: 'Bosch', part: '6055C', cost: 21.99, doneBy: 'DIY', intMiles: 15000, intMonths: 12 }),
+        m({ date: d(380), odo: 33600, action: 'Replaced', condition: 'Dirty', brand: 'FRAM', part: 'Fresh Breeze cabin filter', cost: 15.47, doneBy: 'DIY', intMiles: 15000, intMonths: 12 }),
+        m({ date: d(25), odo: 44700, action: 'Replaced', condition: 'Dirty', brand: 'Honda', part: '80292-TBA-A11', cost: 21.99, doneBy: 'DIY', intMiles: 15000, intMonths: 12 }),
       ],
     } };
 }
@@ -2566,10 +2566,10 @@ function sampleShelf(v) {
   db.inventory.push(
     { id: uid(), sample: true, cat: 'oil', itemId: 'oil-mobil-1-advanced-fs-0w-20-5qt', brand: 'Mobil 1', part: 'Advanced FS 0W-20 5qt', name: 'Mobil 1 Advanced Full Synthetic 0W-20, 5 qt', qty: 6.3, unit: 'qt', size: 5, location: 'Garage shelf', low: 4, price: 6.99, qtyBought: 10, date: addDays(todayISO(), -140), retailer: 'Walmart', fits: [v.id], log: [] },
     { id: uid(), sample: true, cat: 'oilFilter', itemId: null, brand: 'Honda', part: '15400-PLM-A02', name: 'Honda OEM oil filter', qty: 1, unit: 'each', location: 'Garage shelf', low: 1, price: 8.5, qtyBought: 3, date: addDays(todayISO(), -260), retailer: 'Honda dealer', fits: [v.id], log: [] },
-    { id: uid(), sample: true, cat: 'cabinFilter', itemId: null, brand: 'Bosch', part: '6055C', name: 'Bosch HEPA cabin filter', qty: 1, unit: 'each', location: 'Trunk', low: 0, price: 21.99, qtyBought: 2, date: addDays(todayISO(), -25), retailer: 'Amazon', fits: [v.id], log: [] },
-    { id: uid(), sample: true, cat: 'other', itemId: null, brand: 'Rain-X', part: '5079281-2 26"', name: 'Wiper blade 26 in', qty: 2, unit: 'each', location: 'Garage shelf', price: 17.49, qtyBought: 2, date: addDays(todayISO(), -45), fits: [], log: [] });
+    { id: uid(), sample: true, cat: 'cabinFilter', itemId: null, brand: 'Honda', part: '80292-TBA-A11', name: 'Honda OEM cabin air filter', qty: 1, unit: 'each', location: 'Trunk', low: 0, price: 21.99, qtyBought: 2, date: addDays(todayISO(), -25), retailer: 'Amazon', fits: [v.id], log: [] },
+    { id: uid(), sample: true, cat: 'other', itemId: null, brand: 'Rain-X', part: 'Latitude 26 in', name: 'Wiper blade 26 in', qty: 2, unit: 'each', location: 'Garage shelf', price: 17.49, qtyBought: 2, date: addDays(todayISO(), -45), fits: [], log: [] });
   db.plans.push(
-    { id: uid(), sample: true, created: addDays(todayISO(), -30), vid: v.id, cat: 'brakes', brand: 'Akebono', part: 'ACT1089', name: 'Akebono ProACT ceramic front pads', qty: 1, unit: 'set', status: 'planned', targetOdo: 49000, priceAtAdd: 64.99, priceAtAddDate: addDays(todayISO(), -30), notes: 'Front pads at 6 mm' },
+    { id: uid(), sample: true, created: addDays(todayISO(), -30), vid: v.id, cat: 'brakes', brand: 'Akebono', part: 'ProACT ceramic front', name: 'Akebono ProACT ceramic front pads', qty: 1, unit: 'set', status: 'planned', targetOdo: 49000, priceAtAdd: 64.99, priceAtAddDate: addDays(todayISO(), -30), notes: 'Front pads at 6 mm' },
     { id: uid(), sample: true, created: addDays(todayISO(), -12), vid: v.id, cat: 'tires', brand: 'Michelin', part: 'CrossClimate2 225/50R17', name: 'Michelin CrossClimate2 225/50R17 98V', qty: 4, unit: 'each', status: 'planned', targetDate: addDays(todayISO(), 200), priceAtAdd: 228, priceAtAddDate: addDays(todayISO(), -12), notes: 'Tread at 6/32' },
     { id: uid(), sample: true, created: addDays(todayISO(), -5), vid: v.id, cat: 'oil', itemId: 'oil-mobil-1-advanced-fs-0w-20-5qt', brand: 'Mobil 1', part: 'Advanced FS 0W-20 5qt', name: 'Mobil 1 Advanced Full Synthetic 0W-20, 5 qt', qty: 1, unit: 'jugs', status: 'bought', paid: 29.97, paidDate: addDays(todayISO(), -5), retailer: 'Walmart' });
 }
