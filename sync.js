@@ -282,12 +282,12 @@
       const email = sessionStorage.getItem(PEND) || '';
       const wait = Math.max(0, Math.ceil((S.cooldownUntil - Date.now()) / 1000));
       return `<section class="card sync">${head}
-        <p class="sync-lead">We emailed <b>${esc(email)}</b> (subject “Your sign-in link”). Paste the link from that email here. If your email shows a 6-digit code instead, type the code.</p>
+        <p class="sync-lead">We emailed <b>${esc(email)}</b>. New here? It’s titled “Confirm your email address”; after that, “Your sign-in link”. Paste the link from that email here. If your email shows a 6-digit code instead, type the code.</p>
         <form data-sync-form="code" class="sync-form" novalidate>
           <label class="field"><span class="lbl">Sign-in link or code</span><input name="syncCode" autocomplete="one-time-code" autocapitalize="off" spellcheck="false" placeholder="Paste the link (https://…) or code" required></label>
           ${err}<button type="submit" class="btn primary block" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Checking…' : 'Sign in'}</button>
         </form>
-        <div class="sync-tip"><b>How to copy the link:</b> in the email, press and hold <b>Sign in</b>, tap <b>Copy Link</b>, then paste it above. On iPhone Home Screen apps, don’t tap the link: it would sign in Safari, not this app. In a regular browser, tapping it works too.</div>
+        <div class="sync-tip"><b>How to copy the link:</b> in the email, press and hold the link (<b>Sign in</b>, or <b>Confirm email address</b> the first time), tap <b>Copy Link</b>, then paste it above. On iPhone Home Screen apps, don’t tap the link: it would sign in Safari, not this app. In a regular browser, tapping it works too.</div>
         <div class="btn-row"><button type="button" class="btn small" data-sync="resend" ${wait ? 'disabled' : ''}>${wait ? `Resend in ${wait}s` : 'Resend email'}</button><button type="button" class="btn small" data-sync="restart">Use a different email</button></div></section>`;
     }
     return `<section class="card sync">${head}

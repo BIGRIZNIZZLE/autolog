@@ -41,6 +41,7 @@ const I = {
   car: svg('<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="13" r="1"/><circle cx="16.5" cy="13" r="1"/>'),
   chart: svg('<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>'),
   download: svg('<path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/>'),
+  share: svg('<path d="M12 3v12"/><path d="m8 7 4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/>'),
   upload: svg('<path d="M12 21V9m0 0-4 4m4-4 4 4M4 3h16"/>'),
   reset: svg('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>'),
   trash: svg('<path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/>'),
@@ -981,7 +982,27 @@ function viewAbout() {
       <p class="rz-copy">Fuel, maintenance, parts and the true cost of owning your vehicles, tracked on your own device. No ads, no tracking. Sync only happens if you sign in.</p>
       <div class="rz-meta"><div><span>Version</span><b>v${APP_VERSION}</b></div><div><span>Your data</span><b>${synced ? 'This device + your account' : 'This device only'}</b></div><div><span>Vehicles</span><b>${fmt(n)}</b></div><div><span>Records</span><b>${fmt(recs)}</b></div></div>
       <div class="rz-sign">Protect ya data.</div></section>
+    <section class="card"><h3>Share AutoLog</h3><p class="muted" style="margin:6px 0 10px">Send friends the invite page. It walks them through opening it in Safari, adding it to their Home Screen and signing up.</p><div class="btn-row"><button class="btn small primary" data-act="shareApp">${I.share} Share AutoLog</button></div><p class="muted" style="font-size:.8rem;margin:8px 0 0;word-break:break-all">${JOIN_URL}</p></section>
     <section class="card"><h3>Keep it safe</h3><p class="muted" style="margin:6px 0 10px">Export a backup now and then. It’s one file you can import on any device.</p><div class="btn-row"><button class="btn small" data-act="export">${I.download || ''} Export backup</button><a class="btn small" href="#/garage">Settings</a></div></section>`;
+}
+const JOIN_URL = 'https://bigriznizzle.github.io/autolog/join/';
+// Arrived from the invite page (?join=1): remember it for this visit and drop the param so a Home Screen icon gets the clean URL
+(function () { try { if (/[?&]join(=[^&]*)?(&|$)/.test(location.search)) { sessionStorage.setItem('autolog:join', '1'); const q = location.search.slice(1).split('&').filter(x => x && !/^join(=|$)/.test(x)).join('&'); history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash); } } catch (e) { /* ignore */ } })();
+const isStandalone = () => navigator.standalone === true || !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function joinCoach() {
+  let on = false; try { on = sessionStorage.getItem('autolog:join') === '1'; } catch (e) { /* ignore */ }
+  if (!on || isStandalone() || window.AUTOLOG_STANDALONE) return '';
+  const ios = isIOS(), android = /Android/i.test(navigator.userAgent);
+  const how = ios ? 'Tap <b>Share</b> (the square with the arrow; tap <b>•••</b> first if you don’t see it), then <b>Add to Home Screen</b>, then <b>Add</b>.'
+    : android ? 'Tap Chrome’s <b>⋮</b> menu, then <b>Install app</b> (or <b>Add to Home screen</b>).' : 'Use your browser’s <b>Install</b> option in the address bar or menu, or just use it here.';
+  return `<section class="card join-coach"><div class="card-head"><h3>📲 Almost there</h3><button type="button" class="btn small" data-act="joinDone" aria-label="Dismiss">✕</button></div>
+    <p>${how}</p><p class="muted" style="margin:6px 0 0">Then open AutoLog from your Home Screen. To create an account, go to <b>Garage</b> → <b>Account &amp; sync</b>.</p></section>`;
+}
+async function shareApp() {
+  const data = { title: 'AutoLog · RIZNOSS Chamber 01', text: 'AutoLog tracks fuel, maintenance and what your car really costs. Free, private, works offline.', url: JOIN_URL };
+  if (navigator.share) { try { await navigator.share(data); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(JOIN_URL); toast('Invite link copied'); } catch (e) { prompt('Copy this link:', JOIN_URL); }
 }
 function showSplash() {
   try { if (sessionStorage.getItem('autolog:splash') || /[?&]nosplash\b/.test(location.search)) return; sessionStorage.setItem('autolog:splash', '1'); } catch (e) { return; }
@@ -1310,7 +1331,6 @@ function icsFor(items) {
   L.push('END:VCALENDAR');
   return L.map(icsFold).join('\r\n') + '\r\n';
 }
-const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 async function deliverIcs(name, text) {
   const file = typeof File === 'function' ? new File([text], name, { type: 'text/calendar' }) : null;
   if (isIOS()) {
@@ -2247,6 +2267,7 @@ function render() {
   else if (page === 'service' && sub && SEC[sub]) { html = viewSection(v, SEC[sub]); fab.hidden = false; fab.setAttribute('aria-label', `Log ${SEC[sub].noun}`); fab.onclick = () => maintForm(v, SEC[sub]); }
   else if (page === 'service') { html = viewService(v); fab.hidden = false; fab.setAttribute('aria-label', 'Log service'); fab.onclick = () => pickService(v); }
   else html = viewDash(v);
+  if (page === 'dash') html = joinCoach() + html;
   app.innerHTML = html;
   updateBadge();
 }
@@ -2284,6 +2305,7 @@ document.addEventListener('click', e => {
     statsCsv: () => exportStatsCSV(v),
     specUseProfile: () => { const ps = vehProfile(v)?.specs || {}; let n = 0; Object.entries(ps).forEach(([k, x]) => { if (!['src', 'note'].includes(k) && (v.specs[k] == null || v.specs[k] === '')) { v.specs[k] = x; n++; } }); save(); render(); toast(n ? `Filled ${n} specs from the owner’s manual` : 'Nothing new to fill'); },
     csv: () => exportCSV(v), export: exportJSON, import: () => $('#importFile').click(),
+    shareApp: () => shareApp(), joinDone: () => { try { sessionStorage.removeItem('autolog:join'); } catch (e) { /* ignore */ } render(); },
     theme: () => { db.settings.theme = el.value; save(); applyTheme(); },
     install: async () => { if (!installPrompt) return; installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; render(); },
     eraseAll: async () => { const ok = await ask({ title: 'Erase all data?', msg: 'This deletes every vehicle and record on this device. It can’t be undone.', typeToConfirm: 'ERASE', buttons: [{ label: 'Erase everything', value: true, cls: 'danger', needsType: 1 }, { label: 'Cancel', value: false }] }); if (ok) { db = blank(); save(); applyTheme(); render(); toast('All data erased'); } },

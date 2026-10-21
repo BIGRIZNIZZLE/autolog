@@ -52,3 +52,11 @@ index.html · styles.css · app.js (app) · rewards-data.js (rewards reference l
 - **Branding:** the R crest sits in the header (it opens About), and a faint crest appears in the dashboard cost card. A low-opacity watermark sits behind the page content and never takes taps.
 - **About** (`#/about`) and the Garage footer show "Chamber 01 · The Mileage Monk" and "Protect ya data."
 - The calendar export (.ics) PRODID now names RIZNOSS. The home-screen icon is unchanged.
+
+## Invite page (Oct 2026)
+- **https://bigriznizzle.github.io/autolog/join/**: a branded install guide to share. It detects iOS Safari, other iOS browsers and in-app browsers, Android and desktop, and shows the right next step.
+  - Other iOS browsers get an `x-safari-https://` "Open in Safari" button plus a copy-link fallback.
+  - Android gets Chrome's install prompt (when Chrome offers it) and an Open-in-Chrome intent.
+  - Desktop gets a QR code, generated at build time. No runtime services.
+- Build it with `node tools/build-join.js` from `tools/join.template.html`. Rebuild the link-preview image `img/og-autolog.jpg` (1200×630) with `node tools/make-og.js`.
+- The service worker never handles `/join/`. The app shows a one-time "Almost there" card when it's opened with `?join=1`, then removes the parameter. About → **Share AutoLog** shares the invite link.

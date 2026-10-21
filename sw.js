@@ -1,5 +1,5 @@
 /* AutoLog service worker: offline app shell, update prompt, reminder notifications */
-const CACHE = 'autolog-v7';
+const CACHE = 'autolog-v8';
 const DATA = 'autolog-data'; // reminder snapshot written by the page (never deleted on upgrade)
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './rewards-data.js', './parts-catalog.json', './sync.js', './vendor/supabase.js', './manifest.json',
@@ -24,6 +24,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  if (new URL(req.url).pathname.includes('/join/')) return; // invite page: always straight from the network, never the app shell
   if (req.mode === 'navigate') {
     // Network first so a new deploy shows up right away; offline falls back to this page's cached copy, then the app shell.
     e.respondWith(fetch(req).then(r => { if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return r; })

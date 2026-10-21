@@ -481,3 +481,4 @@ main#app{position:relative;z-index:1}
 .rz-foot img{width:26px;height:30px;border-radius:3px;opacity:.9}
 .rz-foot b{letter-spacing:.18em;text-transform:uppercase;font-size:.7rem;color:var(--text);opacity:.8}
 .rz-foot i{font-style:normal;letter-spacing:.06em}
+.join-coach{border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);background:linear-gradient(160deg,var(--accent-soft),var(--surface) 70%)}.join-coach p{margin:6px 0 0}
