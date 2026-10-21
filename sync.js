@@ -236,7 +236,7 @@
     try {
       const c = await client(); let res;
       if (/^\d{6,10}$/.test(digits)) { if (!email) throw new Error('Enter your email again, then the new code.'); res = await c.auth.verifyOtp({ email, token: digits, type: 'email' }); }
-      else { const l = parseLink(raw); if (!l) throw new Error('Enter the 6-digit code, or paste the whole sign-in link from the email.'); res = await c.auth.verifyOtp(l); }
+      else { const l = parseLink(raw); if (!l) throw new Error('Paste the whole sign-in link from the email (or the 6-digit code, if it shows one).'); res = await c.auth.verifyOtp(l); }
       if (res.error) throw res.error;
       sessionStorage.removeItem(PEND);
       S.session = res.data.session; S.state = 'idle'; App.toast('Signed in. Syncing your data…');
@@ -269,19 +269,19 @@
       const email = sessionStorage.getItem(PEND) || '';
       const wait = Math.max(0, Math.ceil((S.cooldownUntil - Date.now()) / 1000));
       return `<section class="card sync">${head}
-        <p class="sync-lead">We emailed <b>${esc(email)}</b>. Enter the 6-digit code, or paste the sign-in link from the email.</p>
+        <p class="sync-lead">We emailed <b>${esc(email)}</b> (subject “Your sign-in link”). Paste the link from that email here. If your email shows a 6-digit code instead, type the code.</p>
         <form data-sync-form="code" class="sync-form" novalidate>
-          <label class="field"><span class="lbl">Code or sign-in link</span><input name="syncCode" autocomplete="one-time-code" autocapitalize="off" spellcheck="false" placeholder="123456 or https://…" required></label>
+          <label class="field"><span class="lbl">Sign-in link or code</span><input name="syncCode" autocomplete="one-time-code" autocapitalize="off" spellcheck="false" placeholder="Paste the link (https://…) or code" required></label>
           ${err}<button type="submit" class="btn primary block" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Checking…' : 'Sign in'}</button>
         </form>
-        <div class="sync-tip"><b>Using AutoLog from your Home Screen?</b> Don’t tap the link in the email; it would open in Safari instead of this app. Press and hold the link, tap <b>Copy Link</b>, then paste it above.</div>
+        <div class="sync-tip"><b>How to copy the link:</b> in the email, press and hold <b>Sign in</b>, tap <b>Copy Link</b>, then paste it above. On iPhone Home Screen apps, don’t tap the link: it would sign in Safari, not this app. In a regular browser, tapping it works too.</div>
         <div class="btn-row"><button type="button" class="btn small" data-sync="resend" ${wait ? 'disabled' : ''}>${wait ? `Resend in ${wait}s` : 'Resend email'}</button><button type="button" class="btn small" data-sync="restart">Use a different email</button></div></section>`;
     }
     return `<section class="card sync">${head}
       <p class="sync-lead">Sign in with your email to keep your vehicles and logs in sync on your phone and other devices. You don’t need an account: without one, everything stays on this device, as it does now.</p>
       <form data-sync-form="email" class="sync-form" novalidate>
         <label class="field"><span class="lbl">Email</span><input type="email" name="syncEmail" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com" required value="${esc(sessionStorage.getItem(PEND) || '')}"></label>
-        ${err}<button type="submit" class="btn primary block" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Sending…' : 'Email me a sign-in code'}</button>
+        ${err}<button type="submit" class="btn primary block" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Sending…' : 'Email me a sign-in link'}</button>
       </form>
       <p class="muted sync-note">No password needed. Data already on this device is merged into your account, never erased.</p></section>`;
   }
