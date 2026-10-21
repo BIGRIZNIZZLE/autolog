@@ -482,3 +482,33 @@ main#app{position:relative;z-index:1}
 .rz-foot b{letter-spacing:.18em;text-transform:uppercase;font-size:.7rem;color:var(--text);opacity:.8}
 .rz-foot i{font-style:normal;letter-spacing:.06em}
 .join-coach{border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);background:linear-gradient(160deg,var(--accent-soft),var(--surface) 70%)}.join-coach p{margin:6px 0 0}
+
+/* ---------- v9: vehicle types (whole-garage) ---------- */
+:root{--c-chain:#8a6d3b;--c-cvt:#b4532a;--c-gear:#7a6a12;--c-lower:#0b7f8c;--c-imp:#1574c4;--c-fsep:#a8326e;--c-anode:#6b7280;--c-trailer:#4d5d7a;--c-winter:#3a8fd8;--c-custom:#5b6476}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--c-chain:#d1ad6a;--c-cvt:#f08a5d;--c-gear:#d4c25a;--c-lower:#41c2cf;--c-imp:#62a9ee;--c-fsep:#e27ab0;--c-anode:#aab2bf;--c-trailer:#93a4c4;--c-winter:#8cc4f5;--c-custom:#a3abbb}}
+:root[data-theme=dark]{--c-chain:#d1ad6a;--c-cvt:#f08a5d;--c-gear:#d4c25a;--c-lower:#41c2cf;--c-imp:#62a9ee;--c-fsep:#e27ab0;--c-anode:#aab2bf;--c-trailer:#93a4c4;--c-winter:#8cc4f5;--c-custom:#a3abbb}
+.c-chain{--c:var(--c-chain)}.c-cvt{--c:var(--c-cvt)}.c-gearOil{--c:var(--c-gear)}.c-lowerUnit{--c:var(--c-lower)}.c-impeller{--c:var(--c-imp)}.c-fuelSep{--c:var(--c-fsep)}.c-anodes{--c:var(--c-anode)}.c-trailer{--c:var(--c-trailer)}.c-winterize{--c:var(--c-winter)}.c-custom{--c:var(--c-custom)}
+/* RIZNOSS-style type badges: navy plate, steel-blue line art */
+[class*="c-vt-"]{--c:#3b7bff}
+.sicon[class*="c-vt-"]{background:linear-gradient(160deg,#0f1a33,#05070d);color:#8fb3ff;box-shadow:inset 0 0 0 1px rgba(120,160,255,.28),0 1px 3px rgba(0,0,0,.25)}
+.vt-filter{display:flex;gap:6px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px;scrollbar-width:none}
+.vt-filter::-webkit-scrollbar{display:none}
+.vt-filter{position:relative}.vt-filter label{flex:none;position:relative}.vt-filter input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.vt-filter span{display:flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:.84rem;white-space:nowrap;cursor:pointer}
+.vt-filter span .ic{width:20px;height:20px}.vt-filter small{color:var(--muted);font-weight:700}
+.vt-filter input:checked+span{background:linear-gradient(160deg,#0f1a33,#122554);border-color:#2c4f9e;color:#e8edf6}.vt-filter input:checked+span small{color:#9fb6e6}
+.vt-filter input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.vt-group{display:flex;align-items:center;gap:10px;margin:16px 2px 8px}
+.vt-group h3{margin:0;font-size:.74rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.vt-group .vt-ic{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:linear-gradient(160deg,#0f1a33,#05070d);color:#8fb3ff;box-shadow:inset 0 0 0 1px rgba(120,160,255,.28)}
+.vt-group .vt-ic .ic{width:18px;height:18px}
+.vt-rule{flex:1;height:2px;border-radius:2px;background:linear-gradient(90deg,#1d4fbf,transparent)}
+.add-type{margin:4px 0 14px}
+.quad.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tire4.two{grid-template-columns:repeat(2,1fr)}
+.cardiag.wide{max-width:300px}
+.zone circle,.zone path{fill:var(--none-soft);stroke:var(--line);stroke-width:1.5;transition:filter .15s}
+.zone.ok circle{fill:color-mix(in srgb,var(--ok) 30%,transparent);stroke:var(--ok)}.zone.soon circle{fill:color-mix(in srgb,var(--soon) 35%,transparent);stroke:var(--soon)}.zone.over circle{fill:color-mix(in srgb,var(--over) 35%,transparent);stroke:var(--over)}
+.zone:hover circle,.zone:focus circle{filter:brightness(1.15)}
+.cardiag .frame{fill:none;stroke:var(--muted);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;opacity:.55}.cardiag .frame.thin{stroke-width:2;opacity:.35}
+.tco-rates.four{grid-template-columns:repeat(4,minmax(0,1fr))}

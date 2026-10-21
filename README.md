@@ -60,3 +60,22 @@ index.html · styles.css · app.js (app) · rewards-data.js (rewards reference l
   - Desktop gets a QR code, generated at build time. No runtime services.
 - Build it with `node tools/build-join.js` from `tools/join.template.html`. Rebuild the link-preview image `img/og-autolog.jpg` (1200×630) with `node tools/make-og.js`.
 - The service worker never handles `/join/`. The app shows a one-time "Almost there" card when it's opened with `?join=1`, then removes the parameter. About → **Share AutoLog** shares the invite link.
+
+## Version 9: the whole garage (Oct 2026)
+- **Vehicle types.** Every vehicle has a type: Car / Truck, Motorcycle, ATV, UTV / Side-by-side, or Boat. Existing vehicles read as Car / Truck. Nothing is rewritten on load, and the type is stored the first time you save the vehicle.
+- **Usage meter.** Cars and motorcycles use miles. Boats use engine hours. ATVs and UTVs use whichever you pick. Hours go in the same odometer fields, so intervals, reminders, projections, cost per hour and TCO all work the same way. Fuel economy shows as GPH for hours-based machines.
+- **Sections per type:**
+  - Motorcycle: chain, sprockets & belt; coolant hides on air-cooled bikes.
+  - ATV/UTV: CVT belt, and diff & gear oil.
+  - Boat: lower unit gear lube, impeller / water pump, fuel/water separator, anodes, trailer bearings & tires, and winterization & storage.
+  - Every type gets an **Other service** entry for anything else.
+  - Sections that already hold entries always stay visible.
+- **Garage.** Vehicles are grouped by type, with filter chips. "All vehicles" totals cover every type, with per-mile and per-hour rates side by side. Each vehicle's distance now counts toward its own range.
+- **Overview.** Diagrams per type: a motorcycle side view, an ATV/UTV top-down view, and a boat hull with trailer. Each zone is colored by health.
+- **VIN/HIN.**
+  - Motorcycles, ATVs and UTVs use the NHTSA VIN decode. It reports NHTSA's vehicle type and auto-selects Motorcycle.
+  - Boats store a HIN as free text, with no decoding.
+  - Specs are user-entered: final drive, CVT & drivetrain, lower unit & cooling.
+- **Parts.** New inventory and plan categories: chain/sprockets/belt, CVT belt, gear oil, impeller kit, fuel/water separator, anodes, trailer parts. Part numbers are user-added only; the catalog ships none for these.
+- **Sync and old versions.** New fields and sections sync as ordinary records. Older app versions keep unknown sections and fields. `tools/test-types-old.js` runs v7 and v8 on v9 data and checks that nothing is dropped.
+- Tests: `node tools/test-types.js` and `node tools/test-types-old.js`. Screenshots: `node tools/shots-types.js`.

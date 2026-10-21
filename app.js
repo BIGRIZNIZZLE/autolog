@@ -55,6 +55,19 @@ const I = {
   box: svg('<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>'),
   list: svg('<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/>'),
   layers: svg('<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>'),
+  moto: svg('<circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16 9.5 9h5l4 7"/><path d="M14.5 9 13 5.5h-2.5M8 9H5.5"/>'),
+  atv: svg('<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M3 13.5h18M6.5 13.5 8.5 9h7l2 4.5M10.5 9V6.5h3"/>'),
+  utv: svg('<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M2.5 15h19v-3l-3.5-1H9L7 4h9l2.5 7"/><path d="M11 4v7"/>'),
+  boat: svg('<path d="M2.5 14h19l-3 5h-13z"/><path d="M6.5 14 8.5 9h6.5l3 5M11.5 9V6"/><path d="M2 22c2 0 2-1 4-1s2 1 4 1 2-1 4-1 2 1 4 1 2-1 4-1"/>'),
+  chain: svg('<rect x="2" y="9" width="9" height="6" rx="3"/><rect x="13" y="9" width="9" height="6" rx="3"/><path d="M8.5 12h7"/>'),
+  cvt: svg('<circle cx="6.5" cy="12" r="4.5"/><circle cx="18" cy="12" r="3"/><path d="M6.5 7.5 18 9M6.5 16.5 18 15"/><circle cx="6.5" cy="12" r="1"/>'),
+  gear: svg('<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>'),
+  lowerUnit: svg('<path d="M8 2h7v6H8zM10.5 8v10"/><path d="M8 18h8l-2 3H8.5z"/><path d="M16 18.5 20 16"/>'),
+  impeller: svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 10c0-3 2-5 5-6M14 12c3 0 5 2 6 5M12 14c0 3-2 5-5 6M10 12c-3 0-5-2-6-5"/>'),
+  fuelSep: svg('<path d="M8 2.5h8v3H8z"/><rect x="7" y="5.5" width="10" height="15.5" rx="2"/><path d="M7 15h10M4 4h4M16 4h4"/>'),
+  anode: svg('<path d="M8 4h8l-1.5 16h-5z"/><path d="M9.5 8h5M9.8 12h4.4M10.2 16h3.6"/>'),
+  trailer: svg('<path d="M2 14V9h15v5zM17 12h5"/><circle cx="8" cy="17" r="2.5"/><path d="M2 14h3.5M10.5 14H17"/>'),
+  winter: svg('<path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7"/><path d="m9 4 3 2 3-2M9 20l3-2 3 2"/>'),
   coil: svg('<path d="M9 3h6v4H9zM10 7v3M14 7v3"/><path d="M8 10h8l-1 8h-6z"/><path d="M12 18v3"/>'),
 };
 const LIB = (window.AUTOLOG_REWARDS && window.AUTOLOG_REWARDS.programs) || [];
@@ -195,8 +208,187 @@ const SECTIONS = [
     summary: e => `${e.action || 'Service'}${e.condition ? ' · was ' + e.condition.toLowerCase() : ''}`,
     chips: e => [[e.brand, e.part].filter(Boolean).join(' '), e.doneBy === 'Shop' ? (e.shop || 'Shop') : e.doneBy],
   },
+  {
+    id: 'chain', title: 'Chain, sprockets & belt', icon: I.chain, noun: 'chain / belt service',
+    fields: [F.date, F.odo,
+      { k: 'services', l: 'What was done', t: 'multi', opts: ['Clean & lube', 'Slack adjusted', 'Inspected', 'New chain', 'New sprockets', 'New belt'], def: ['Clean & lube'] },
+      { k: 'slack', l: 'Slack measured', t: 'num', unit: 'mm', half: 1, step: 1 }, { k: 'drive', l: 'Final drive', t: 'seg', opts: ['Chain', 'Belt', 'Shaft'], half: 1 },
+      H('Parts'), { k: 'pick', t: 'pick', cat: 'chain', l: 'Chain / sprocket / belt bought', showIf: v => has(v.services, 'New chain') || has(v.services, 'New sprockets') || has(v.services, 'New belt') },
+      { k: 'brand', l: 'Brand', t: 'text', half: 1, list: 1 }, { k: 'part', l: 'Part # / size', t: 'text', half: 1, ph: 'e.g. 520 x 114' },
+      { k: 'lube', l: 'Lube used', t: 'text', list: 1 },
+      F.doneBy, F.shop, F.cost, F.noCharge,
+      H('Next service'), { ...F.intMi(undefined), hint: 'Use the slack and lube interval from your owner’s manual.' }, F.intMo(undefined), F.notes],
+    summary: e => (e.services || []).join(', ') || 'Chain service',
+    chips: e => [[e.brand, e.part].filter(Boolean).join(' '), e.slack != null && e.slack !== '' && `${e.slack} mm slack`, e.drive, e.doneBy === 'Shop' ? (e.shop || 'Shop') : e.doneBy],
+  },
+  {
+    id: 'cvt', title: 'CVT / drive belt', icon: I.cvt, noun: 'CVT belt service',
+    fields: [F.date, F.odo,
+      { k: 'action', l: 'What was done', t: 'seg', opts: ['Inspected', 'Replaced', 'Clutch serviced'], def: 'Inspected' },
+      { k: 'condition', l: 'Belt condition', t: 'seg', opts: ['Good', 'Glazed', 'Cracked', 'Worn narrow', 'Broke'] },
+      { k: 'width', l: 'Belt width measured', t: 'num', unit: 'mm', half: 1, step: 0.1, hint: 'Compare with the service limit in your manual.' },
+      H('Belt'), { k: 'pick', t: 'pick', cat: 'cvtBelt', l: 'Belt bought', showIf: v => v.action === 'Replaced' },
+      { k: 'brand', l: 'Brand', t: 'text', half: 1, list: 1 }, { k: 'part', l: 'Part #', t: 'text', half: 1 },
+      F.doneBy, F.shop, F.cost, F.noCharge,
+      H('Next inspection'), { ...F.intMi(undefined), hint: 'Inspections don’t restart a replacement interval. Use your owner’s manual.' }, F.intMo(undefined), F.notes],
+    anchor: list => list.find(e => e.action === 'Replaced') || list[0] || null,
+    summary: e => `${e.action || 'Belt service'}${e.condition ? ' · ' + e.condition.toLowerCase() : ''}`,
+    chips: e => [[e.brand, e.part].filter(Boolean).join(' '), e.width != null && e.width !== '' && `${e.width} mm`, e.doneBy === 'Shop' ? (e.shop || 'Shop') : e.doneBy],
+  },
+  {
+    id: 'gearOil', title: 'Diff & gear oil', icon: I.gear, noun: 'gear oil service',
+    fields: [F.date, F.odo,
+      { k: 'where', l: 'Which', t: 'multi', opts: ['Front diff', 'Rear diff', 'Transmission', 'Gearcase'], def: ['Front diff', 'Rear diff'] },
+      { k: 'service', l: 'Service', t: 'seg', opts: ['Changed', 'Checked / topped off'], def: 'Changed' },
+      H('Fluid'), { k: 'pick', t: 'pick', cat: 'gearOil', l: 'Gear oil bought', showIf: v => v.service === 'Changed' },
+      { k: 'brand', l: 'Brand', t: 'text', half: 1, list: 1 }, { k: 'grade', l: 'Type / weight', t: 'text', half: 1, list: ['75W-90', '80W-90', '75W-140', 'ATF', 'Front drive fluid'] },
+      { k: 'qty', l: 'Quantity', t: 'num', unit: 'oz', half: 1, step: 0.1 },
+      F.doneBy, F.shop, F.cost, F.noCharge,
+      H('Next change'), F.intMi(undefined), F.intMo(undefined), F.notes],
+    anchor: list => list.find(e => e.service === 'Changed') || null,
+    summary: e => `${e.service || 'Gear oil'}${(e.where || []).length ? ' · ' + e.where.join(', ') : ''}`,
+    chips: e => [[e.brand, e.grade].filter(Boolean).join(' '), e.qty && `${e.qty} oz`, e.doneBy === 'Shop' ? (e.shop || 'Shop') : e.doneBy],
+  },
+  {
+    id: 'lowerUnit', title: 'Lower unit gear lube', icon: I.lowerUnit, noun: 'lower unit service',
+    fields: [F.date, F.odo,
+      { k: 'service', l: 'Service', t: 'seg', opts: ['Changed', 'Checked'], def: 'Changed' },
+      { k: 'found', l: 'Old lube looked', t: 'seg', opts: ['Clean', 'Milky (water)', 'Metal flakes', 'Low'] },
+      { k: 'gaskets', l: 'Drain / vent screw gaskets replaced', t: 'check' },
+      H('Lube'), { k: 'pick', t: 'pick', cat: 'gearOil', l: 'Gear lube bought', showIf: v => v.service === 'Changed' },
+      { k: 'brand', l: 'Brand', t: 'text', half: 1, list: 1 }, { k: 'grade', l: 'Type', t: 'text', half: 1, list: 1 },
+      { k: 'qty', l: 'Quantity', t: 'num', unit: 'oz', half: 1, step: 0.1 },
+      F.doneBy, F.shop, F.cost, F.noCharge,
+      H('Next change'), { ...F.intMi(undefined), hint: 'Milky lube means water is getting in. Have the seals checked.' }, F.intMo(undefined), F.notes],
+    anchor: list => list.find(e => e.service === 'Changed') || null,
+    summary: e => `${e.service || 'Lower unit'}${e.found ? ' · was ' + e.found.toLowerCase() : ''}`,
+    chips: e => [[e.brand, e.grade].filter(Boolean).join(' '), e.qty && `${e.qty} oz`, e.gaskets && 'New gaskets', e.doneBy === 'Shop' ? (e.shop || 'Shop') : e.doneBy],
+  },
+  {
+    id: 'impeller', title: 'Impeller / water pump', icon: I.impeller, noun: 'impeller service',
+    fields: [F.date, F.odo,
+      { k: 'action', l: 'What was done', t: 'seg', opts: ['Replaced', 'Inspected', 'Water pump kit'], def: 'Replaced' },
+      { k: 'condition', l: 'Old impeller', t: 'seg', opts: ['Good', 'Vanes set / curled', 'Cracked', 'Missing vanes'] },
+      H('Parts'), { k: 'pick', t: 'pick', cat: 'impeller', l: 'Impeller / kit bought', showIf: v => v.action !== 'Inspected' },
+      { k: 'brand', l: 'Brand', t: 'text', half: 1, list: 1 }, { k: 'part', l: 'Part #', t: 'text', half: 1 },
+      F.doneBy, F.shop, F.cost, F.noCharge,
+      H('Next replacement'), { ...F.intMi(undefined), hint: 'Use the interval in your engine manual. Missing vanes can lodge in the cooling passages.' }, F.intMo(undefined), F.notes],
+    anchor: list => list.find(e => e.action !== 'Inspected') || null,
+    summary: e => `${e.action || 'Impeller'}${e.condition ? ' · was ' + e.condition.toLowerCase() : ''}`,
+    chips: e => [[e.brand, e.part].filter(Boolean).join(' '), e.doneBy === 'Shop' ? (e.shop || 'Shop') : e.doneBy],
+  },
+  {
+    id: 'fuelSep', title: 'Fuel / water separator', icon: I.fuelSep, noun: 'fuel filter service',
+    fields: [F.date, F.odo,
+      { k: 'action', l: 'What was done', t: 'seg', opts: ['Replaced', 'Drained', 'Inspected'], def: 'Replaced' },
+      { k: 'water', l: 'Water found in bowl', t: 'check' },
+      H('Filter'), { k: 'pick', t: 'pick', cat: 'fuelSep', l: 'Filter bought', showIf: v => v.action === 'Replaced' },
+      { k: 'brand', l: 'Brand', t: 'text', half: 1, list: 1 }, { k: 'part', l: 'Part #', t: 'text', half: 1 },
+      F.doneBy, F.shop, F.cost, F.noCharge,
+      H('Next replacement'), F.intMi(undefined), F.intMo(undefined), F.notes],
+    anchor: list => list.find(e => e.action === 'Replaced') || null,
+    summary: e => `${e.action || 'Filter'}${e.water ? ' · water found' : ''}`,
+    chips: e => [[e.brand, e.part].filter(Boolean).join(' '), e.doneBy === 'Shop' ? (e.shop || 'Shop') : e.doneBy],
+  },
+  {
+    id: 'anodes', title: 'Anodes (zincs)', icon: I.anode, noun: 'anode service',
+    fields: [F.date, F.odo,
+      { k: 'action', l: 'What was done', t: 'seg', opts: ['Replaced', 'Inspected'], def: 'Inspected' },
+      { k: 'material', l: 'Material', t: 'seg', opts: ['Zinc', 'Aluminum', 'Magnesium'], hint: 'Match the material to your water and your engine maker’s spec.' },
+      { k: 'left', l: 'Remaining (worst one)', t: 'num', unit: '%', half: 1, step: 5 }, { k: 'locations', l: 'Locations', t: 'text', half: 1, ph: 'trim tab, gearcase, transom' },
+      H('Parts'), { k: 'pick', t: 'pick', cat: 'anodes', l: 'Anodes bought', showIf: v => v.action === 'Replaced' },
+      { k: 'brand', l: 'Brand', t: 'text', half: 1, list: 1 }, { k: 'part', l: 'Part #', t: 'text', half: 1 },
+      F.doneBy, F.shop, F.cost, F.noCharge,
+      H('Next check'), F.intMi(undefined), F.intMo(undefined), F.notes],
+    summary: e => `${e.action || 'Anodes'}${e.material ? ' · ' + e.material : ''}`,
+    chips: e => [e.left != null && e.left !== '' && `${e.left}% left`, e.locations, [e.brand, e.part].filter(Boolean).join(' ')],
+  },
+  {
+    id: 'trailer', title: 'Trailer bearings & tires', icon: I.trailer, noun: 'trailer service',
+    fields: [F.date,
+      { k: 'services', l: 'What was done', t: 'multi', opts: ['Bearings greased', 'Bearings repacked', 'Bearings replaced', 'New trailer tires', 'Tire pressure check', 'Lights checked', 'Brakes serviced', 'Winch / strap checked'], def: ['Bearings greased'] },
+      { k: 'size', l: 'Tire size', t: 'text', half: 1, list: 1, ph: 'e.g. ST205/75R15' }, { k: 'psi', l: 'Pressure set', t: 'num', unit: 'PSI', half: 1, step: 1 },
+      H('Parts'), { k: 'pick', t: 'pick', cat: 'trailer', l: 'Parts bought', showIf: v => has(v.services, 'Bearings replaced') || has(v.services, 'New trailer tires') || has(v.services, 'Brakes serviced') },
+      { k: 'brand', l: 'Brand', t: 'text', half: 1, list: 1 }, { k: 'part', l: 'Part #', t: 'text', half: 1 },
+      F.doneBy, F.shop, F.cost, F.noCharge,
+      H('Next service'), F.intMo(undefined), F.notes],
+    summary: e => (e.services || []).join(', ') || 'Trailer service',
+    chips: e => [e.size, e.psi && `${e.psi} PSI`, [e.brand, e.part].filter(Boolean).join(' ')],
+  },
+  {
+    id: 'winterize', title: 'Winterization & storage', icon: I.winter, noun: 'storage entry',
+    fields: [F.date, F.odo,
+      { k: 'action', l: 'What', t: 'seg', opts: ['Winterized', 'Stored', 'De-winterized', 'Launched'], def: 'Winterized' },
+      { k: 'steps', l: 'Steps done', t: 'multi', opts: ['Fuel stabilizer', 'Engine fogged', 'Water drained', 'Antifreeze in block', 'Oil changed', 'Gear lube changed', 'Battery on tender', 'Battery removed', 'Covered / shrink-wrapped'], showIf: v => v.action === 'Winterized' || v.action === 'Stored' },
+      { k: 'where', l: 'Stored at', t: 'text', list: 1 },
+      F.doneBy, F.shop, F.cost, F.noCharge,
+      H('Next winterization'), F.intMo(12), F.notes],
+    anchor: list => list.find(e => e.action === 'Winterized') || null,
+    summary: e => e.action || 'Storage',
+    chips: e => [(e.steps || []).length && plural(e.steps.length, 'step'), e.where, e.doneBy === 'Shop' ? (e.shop || 'Shop') : e.doneBy],
+  },
+  {
+    id: 'custom', title: 'Other service', icon: I.wrench, noun: 'service',
+    fields: [F.date, F.odo,
+      { k: 'what', l: 'What was done', t: 'text', req: 1, list: 1, ph: 'e.g. Valve adjustment, fork seals, bilge pump' },
+      { k: 'brand', l: 'Brand', t: 'text', half: 1, list: 1 }, { k: 'part', l: 'Part #', t: 'text', half: 1 },
+      F.doneBy, F.shop, F.cost, F.noCharge,
+      H('Repeat (optional)'), F.intMi(undefined), F.intMo(undefined), F.notes],
+    summary: e => e.what || 'Service',
+    chips: e => [[e.brand, e.part].filter(Boolean).join(' '), e.doneBy === 'Shop' ? (e.shop || 'Shop') : e.doneBy],
+  },
 ];
 const SEC = Object.fromEntries(SECTIONS.map(s => [s.id, s]));
+
+/* ---------- vehicle types & usage units (v9) ---------- */
+const VTYPES = {
+  car: { l: 'Car / Truck', icon: I.car, secs: ['oil', 'coolant', 'brakes', 'tires', 'plugs', 'battery', 'airFilter', 'cabinFilter', 'custom'] },
+  moto: { l: 'Motorcycle', icon: I.moto, secs: ['oil', 'chain', 'tires', 'brakes', 'coolant', 'plugs', 'battery', 'airFilter', 'custom'] },
+  atv: { l: 'ATV', icon: I.atv, secs: ['oil', 'cvt', 'gearOil', 'airFilter', 'tires', 'brakes', 'plugs', 'battery', 'coolant', 'custom'] },
+  utv: { l: 'UTV / Side-by-side', icon: I.utv, secs: ['oil', 'cvt', 'gearOil', 'airFilter', 'tires', 'brakes', 'plugs', 'battery', 'coolant', 'custom'] },
+  boat: { l: 'Boat', icon: I.boat, secs: ['oil', 'lowerUnit', 'impeller', 'fuelSep', 'plugs', 'battery', 'anodes', 'trailer', 'winterize', 'custom'] },
+};
+const VT_ORDER = ['car', 'moto', 'atv', 'utv', 'boat'];
+const vtype = v => (v && VTYPES[v.type]) ? v.type : 'car';
+const VT = v => VTYPES[vtype(v)];
+const vtByLabel = l => VT_ORDER.find(k => VTYPES[k].l === l) || 'car';
+const isHrs = v => { const t = vtype(v); return t === 'boat' || ((t === 'atv' || t === 'utv') && v.meter === 'hr'); };
+let UV = null; // vehicle whose units the current screen uses
+const UM = (v = UV) => isHrs(v) ? 'hrs' : 'mi';
+const fmtO = (x, v = UV) => isHrs(v) && x != null && isFinite(x) ? fmt(x, Math.round(x * 10) % 10 ? 1 : 0) : fmt(x); // hour meters read in tenths
+const UWORD = (v = UV) => isHrs(v) ? 'hours' : 'miles';
+const UONE = (v = UV) => isHrs(v) ? 'hour' : 'mile';
+const ODOL = (v = UV) => isHrs(v) ? 'Engine hours' : 'Odometer';
+const econTxt = (v, mpg, d = 1) => mpg ? (isHrs(v) ? `${fmt(1 / mpg, d)} GPH` : `${fmt(mpg, d)} mpg`) : '—';
+const econVal = (v, mpg) => mpg ? (isHrs(v) ? 1 / mpg : mpg) : null;
+const ECON = (v = UV) => isHrs(v) ? 'GPH' : 'MPG';
+const secsFor = v => { const t = vtype(v), want = VT(v).secs.filter(id => !(id === 'coolant' && t === 'moto' && v.cooling === 'Air-cooled')); return SECTIONS.filter(s => want.includes(s.id) || ((v.maint || {})[s.id] || []).length); };
+const TPOS = v => vtype(v) === 'moto' ? [['fl', 'Front'], ['rl', 'Rear']] : TIRE_POS;
+const MARINE_HINT = { k: 'marineHint', t: 'hint', l: 'Marine engines: check your engine manual for the ethanol limit (many say E10 max) and use stabilizer for storage. Pick E0 for ethanol-free / marina fuel.' };
+function fieldsFor(v, fields) {
+  const h = isHrs(v), t = vtype(v);
+  if (!h && t === 'car') return fields;
+  const out = [];
+  fields.forEach(f => {
+    let g = f;
+    if (h && f.unit === 'mi') g = { ...g, unit: 'hrs', step: f.step === 1 ? 0.1 : f.step, l: f.l === 'Odometer' ? 'Engine hours' : f.l === 'Current odometer' ? 'Current engine hours' : f.l === 'or odometer' ? 'or engine hours' : f.l };
+    if (t === 'moto' && f.t === 'quad') g = { ...g, pos: TPOS(v) };
+    if (t === 'moto' && f.k === 'positions') g = { ...g, opts: ['FL', 'RL'], optL: { FL: 'Front', RL: 'Rear' }, def: ['FL', 'RL'] };
+    if (t === 'moto' && f.k === 'count') g = { ...g, def: 2 };
+    if (t === 'moto' && f.t === 'fit') return; // car-catalog fitment cards don't apply
+    if (t !== 'car' && f.t === 'fit') return;
+    out.push(g);
+    if (t === 'boat' && f.k === 'eth') out.push(MARINE_HINT);
+  });
+  return out;
+}
+// For stats-heavy screens (all app-generated text), relabel distance/MPG wording for hours-based vehicles.
+function hrsText(html, v = UV) {
+  if (!isHrs(v)) return html;
+  return html.replace(/(<[^>]*>)|([^<]+)/g, (m, tag, txt) => tag ? tag : txt
+    .replace(/\bMPG\b/g, 'hr/gal').replace(/\bmpg\b/g, 'hr/gal').replace(/\bper mile\b/g, 'per hour').replace(/\$\/mi\b/g, '$/hr').replace(/\/mi\b/g, '/hr')
+    .replace(/1,000 mi\b/g, '1,000 hrs').replace(/1k mi\b/g, '1k hrs').replace(/(\d|—) mi\b/g, '$1 hrs').replace(/\bAvg mi\b/g, 'Avg hrs').replace(/\bmiles a day\b/g, 'hours a day').replace(/\bMiles on oil\b/g, 'Hours on oil').replace(/\bMiles\b/g, 'Hours').replace(/\bmiles\b/g, 'hours').replace(/\bodometer\b/g, 'engine hours'));
+}
 function quadText(q, u) { if (!q) return ''; const parts = TIRE_POS.map(([k, l]) => q[k] != null && q[k] !== '' ? `${l} ${q[k]}` : null).filter(Boolean); return parts.length ? parts.join(' ') + u : ''; }
 
 /* ---------- fuel + vehicle schema ---------- */
@@ -223,12 +415,17 @@ const FUEL_FIELDS = [
   { k: 'missed', l: 'I missed logging a fill before this one', t: 'check', sub: 'Restarts MPG tracking so your stats stay accurate' },
   F.notes,
 ];
+const isOffroadL = x => x.typeL === 'ATV' || x.typeL === 'UTV / Side-by-side';
 const VEHICLE_FIELDS = [
-  { k: 'vin', l: 'VIN', t: 'vin' },
+  { k: 'typeL', l: 'Type', t: 'seg', opts: ['Car / Truck', 'Motorcycle', 'ATV', 'UTV / Side-by-side', 'Boat'], def: 'Car / Truck' },
+  { k: 'meterL', l: 'Track usage by', t: 'seg', opts: ['Miles', 'Hours'], def: 'Miles', showIf: isOffroadL, hint: 'Use whatever your meter shows. Intervals, reminders, and cost per mile or hour follow this.' },
+  { k: 'cooling', l: 'Engine cooling', t: 'seg', opts: ['Liquid-cooled', 'Air-cooled'], def: 'Liquid-cooled', showIf: x => x.typeL === 'Motorcycle', hint: 'Air-cooled bikes hide the coolant section.' },
+  { k: 'vin', l: 'VIN', t: 'vin', showIf: x => x.typeL !== 'Boat' },
+  { k: 'hin', l: 'HIN (hull ID number)', t: 'text', ph: 'Usually 12 characters on the transom', showIf: x => x.typeL === 'Boat', hint: 'Saved exactly as typed. AutoLog doesn’t decode HINs; enter the specs yourself.' },
   { k: 'name', l: 'Nickname', t: 'text', ph: 'e.g. Daily driver' },
   { k: 'year', l: 'Year', t: 'num', step: 1, half: 1, req: 1 }, { k: 'make', l: 'Make', t: 'text', half: 1, req: 1 },
   { k: 'model', l: 'Model', t: 'text', half: 1, req: 1 }, { k: 'trim', l: 'Trim / engine', t: 'text', half: 1 },
-  { k: 'odometer', l: 'Current odometer', t: 'num', unit: 'mi', step: 1, half: 1 }, { k: 'tank', l: 'Tank size', t: 'num', unit: 'gal', step: 0.1, half: 1, hint: 'Used for estimated range. Leave it blank to use your largest fill.' },
+  { k: 'odometer', l: 'Current odometer', t: 'num', unit: 'mi', step: 'any', half: 1 }, { k: 'tank', l: 'Tank size', t: 'num', unit: 'gal', step: 0.1, half: 1, hint: 'Used for estimated range. Leave it blank to use your largest fill.' },
   H('Details'),
   { k: 'engine', l: 'Engine', t: 'text', ph: 'e.g. 1.5 L · 4 cyl · In-Line' },
   { k: 'fuelType', l: 'Fuel type', t: 'text', half: 1 }, { k: 'drive', l: 'Drive type', t: 'text', half: 1 },
@@ -270,11 +467,11 @@ function curOdo(v) {
   if (!v) return 0;
   let m = num(v.odometer) || 0;
   v.fuel.forEach(e => { m = Math.max(m, num(e.odo) || 0); });
-  SECTIONS.forEach(s => v.maint[s.id].forEach(e => { m = Math.max(m, num(e.odo) || 0); }));
+  SECTIONS.forEach(s => (v.maint[s.id] || []).forEach(e => { m = Math.max(m, num(e.odo) || 0); }));
   return m;
 }
 const byNewest = (a, b) => (b.date || '').localeCompare(a.date || '') || (num(b.odo) || 0) - (num(a.odo) || 0);
-const entries = (v, id) => [...v.maint[id]].sort(byNewest);
+const entries = (v, id) => [...(v.maint[id] || [])].sort(byNewest);
 
 /* ---------- fuel math (full-to-full) ---------- */
 const octVal = e => e.octane === 'Other' ? num(e.octaneOther) : num(e.octane);
@@ -425,11 +622,12 @@ function intervalStatus(a, v) {
   const odo = curOdo(v), im = num(a.intMiles), imo = num(a.intMonths);
   const dueOdo = im && num(a.odo) != null ? num(a.odo) + im : null;
   const dueDate = imo && a.date ? addMonths(a.date, imo) : null;
-  if (!dueOdo && !dueDate) return { level: 'ok', label: 'Logged', text: `Last done ${fdate(a.date)} at ${fmt(num(a.odo))} mi` };
+  const um = UM(v), h = isHrs(v);
+  if (!dueOdo && !dueDate) return { level: 'ok', label: 'Logged', text: `Last done ${fdate(a.date)}${num(a.odo) != null ? ` at ${fmtO(num(a.odo), v)} ${um}` : ''}` };
   let level = 'ok'; const left = [];
-  if (dueOdo != null) { const m = dueOdo - odo; if (m <= 0) level = 'over'; else if (m <= Math.max(500, im * 0.1)) level = worse(level, 'soon'); left.push(m <= 0 ? `${fmt(-m)} mi overdue` : `${fmt(m)} mi left`); }
+  if (dueOdo != null) { const m = dueOdo - odo; if (m <= 0) level = 'over'; else if (m <= Math.max(h ? 5 : 500, im * 0.1)) level = worse(level, 'soon'); left.push(m <= 0 ? `${fmtO(-m, v)} ${um} overdue` : `${fmtO(m, v)} ${um} left`); }
   if (dueDate) { const d = daysBetween(todayISO(), dueDate); if (d <= 0) level = 'over'; else if (d <= 30) level = worse(level, 'soon'); left.push(d <= 0 ? `${plural(-d, 'day')} overdue` : d < 60 ? `${plural(d, 'day')} left` : `${fmt(d / 30.44)} mo left`); }
-  const due = [dueOdo != null && `${fmt(dueOdo)} mi`, dueDate && fdate(dueDate)].filter(Boolean).join(' or ');
+  const due = [dueOdo != null && `${fmtO(dueOdo, v)} ${um}`, dueDate && fdate(dueDate)].filter(Boolean).join(' or ');
   return { level, label: LBL[level], text: `Due at ${due} · ${left.join(', ')}`, dueOdo, dueDate };
 }
 const tireSet = v => entries(v, 'tires').find(e => has(e.services, 'New tires')) || null;
@@ -532,7 +730,7 @@ function fieldHTML(f, vals, pool) {
     case 'textarea': inner = `<textarea ${name} ${ph}>${esc(val)}</textarea>`; break;
     case 'select': inner = `<select ${name}>${f.opts.map(o => `<option value="${esc(o)}" ${String(val ?? '') === o ? 'selected' : ''}>${esc(o || '—')}</option>`).join('')}</select>`; break;
     case 'seg': return `<div class="${cls}" data-k="${f.k}" role="radiogroup" aria-label="${esc(f.l)}">${lbl}<div class="seg">${f.opts.map(o => `<label><input type="radio" ${name} value="${esc(o)}" ${String(val) === o ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div>${hint}</div>`;
-    case 'multi': return `<div class="${cls}" data-k="${f.k}" role="group" aria-label="${esc(f.l)}">${lbl}<div class="seg">${f.opts.map(o => `<label><input type="checkbox" ${name} value="${esc(o)}" ${has(val, o) ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div>${hint}</div>`;
+    case 'multi': return `<div class="${cls}" data-k="${f.k}" role="group" aria-label="${esc(f.l)}">${lbl}<div class="seg">${f.opts.map(o => `<label><input type="checkbox" ${name} value="${esc(o)}" ${has(val, o) ? 'checked' : ''}><span>${esc((f.optL && f.optL[o]) || o)}</span></label>`).join('')}</div>${hint}</div>`;
     case 'check': return `<div class="${cls}" data-k="${f.k}"><label class="toggle"><span>${esc(f.l)}${f.sub ? `<small>${esc(f.sub)}</small>` : ''}</span><input type="checkbox" role="switch" ${name} ${val ? 'checked' : ''}></label></div>`;
     case 'vin': return `<div class="${cls}" data-k="vin">${lbl}<div class="vinrow"><input type="text" name="vin" value="${esc(val)}" maxlength="17" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="17 characters" aria-describedby="vinMsg"><button type="button" class="btn small primary" data-vinlookup>Look up</button></div><small class="muted vinmsg" id="vinMsg">Enter the 17-character VIN (windshield corner or driver’s door jamb) to auto-fill details from NHTSA.</small></div>`;
     case 'progs': {
@@ -542,7 +740,7 @@ function fieldHTML(f, vals, pool) {
         return `<div class="rw${r ? ' on' : ''}" data-pid="${pr.id}"><label class="rw-head"><input type="checkbox" name="rw.${pr.id}.on" data-rwon="${pr.id}" ${r ? 'checked' : ''}><span class="rw-check">${I.check}</span><span class="rw-name">${esc(progName(pr))}</span>${lib?.cpg ? `<small>${lib.cpg}¢ base</small>` : lib?.ppg ? `<small>${lib.ppg} pts/gal</small>` : ''}</label>
           <div class="rw-fields"><label><span>¢/gal off</span><input type="number" inputmode="decimal" step="any" name="rw.${pr.id}.cpg" value="${esc(r?.cpg)}"></label><label><span>$ saved</span><input type="number" inputmode="decimal" step="any" name="rw.${pr.id}.saved" value="${esc(r?.saved)}"></label><label><span>Points</span><input type="number" inputmode="decimal" step="any" name="rw.${pr.id}.points" value="${esc(r?.points)}"></label></div></div>`; }).join('')}</div></div>`;
     }
-    case 'quad': return `<div class="${cls}" data-k="${f.k}">${lbl}<div class="quad">${TIRE_POS.map(([k, l]) => `<label><b>${l}</b><input type="number" inputmode="decimal" name="${f.k}.${k}" step="${f.step || 'any'}" value="${esc(val?.[k])}" aria-label="${esc(f.l)} ${l}"></label>`).join('')}</div>${hint}</div>`;
+    case 'quad': return `<div class="${cls}" data-k="${f.k}">${lbl}<div class="quad${f.pos && f.pos.length === 2 ? ' two' : ''}">${(f.pos || TIRE_POS).map(([k, l]) => `<label><b>${l}</b><input type="number" inputmode="decimal" name="${f.k}.${k}" step="${f.step || 'any'}" value="${esc(val?.[k])}" aria-label="${esc(f.l)} ${l}"></label>`).join('')}</div>${hint}</div>`;
   }
   return `<label class="${cls}" data-k="${f.k}">${lbl}${inner}${hint}</label>`;
 }
@@ -558,7 +756,7 @@ function readForm(form, fields) {
       case 'check': o[f.k] = el.checked; break;
       case 'pick': { let x = null; try { x = el.value ? JSON.parse(el.value) : null; } catch (e) { x = null; } o[f.k] = x; break; }
       case 'progs': o[f.k] = db.programs.filter(pr => form.elements[`rw.${pr.id}.on`]?.checked).map(pr => ({ pid: pr.id, name: progName(pr), cpg: num(form.elements[`rw.${pr.id}.cpg`].value), saved: num(form.elements[`rw.${pr.id}.saved`].value), points: num(form.elements[`rw.${pr.id}.points`].value) })); break;
-      case 'quad': { const q = {}; TIRE_POS.forEach(([k]) => { q[k] = num(form.elements[`${f.k}.${k}`].value); }); o[f.k] = TIRE_POS.some(([k]) => q[k] != null) ? q : null; break; }
+      case 'quad': { const q = {}, P = f.pos || TIRE_POS; P.forEach(([k]) => { q[k] = num(form.elements[`${f.k}.${k}`].value); }); o[f.k] = P.some(([k]) => q[k] != null) ? q : null; break; }
       default: o[f.k] = (el.value || '').trim();
     }
   }
@@ -614,6 +812,11 @@ function defaults(fields, v, last) {
 }
 
 /* ---------- actions ---------- */
+function vehOdoLabel(form) {
+  const x = { typeL: ($('input[name="typeL"]:checked', form) || {}).value, meterL: ($('input[name="meterL"]:checked', form) || {}).value };
+  const h = x.typeL === 'Boat' || (isOffroadL(x) && x.meterL === 'Hours'), f = $('[data-k="odometer"]', form); if (!f) return;
+  $('.lbl', f).textContent = h ? 'Current engine hours' : 'Current odometer'; const em = $('em', f); if (em) em.textContent = h ? 'hrs' : 'mi';
+}
 function addVehicle(existing, opts = {}) {
   let pending = null;
   const lookup = async form => {
@@ -628,16 +831,24 @@ function addVehicle(existing, opts = {}) {
       Object.entries(r.fields).forEach(([k, val]) => { const el = form.elements[k]; if (el && val) { el.value = val; filled.push(k); $(`[data-k="${k}"]`, form)?.classList.add('autofill'); } });
       pending = r.raw;
       msg.className = 'vinmsg good';
-      msg.textContent = `Filled ${filled.length} fields from NHTSA vPIC. Review and edit them, then tap Save.${chk.msg ? ' ' + chk.msg : ''}${r.note ? ' NHTSA note: ' + r.note : ''}`;
+      const vt = r.raw.vehicleType || '';
+      if (/motorcycle/i.test(vt)) setField(form, 'typeL', 'Motorcycle');
+      vehOdoLabel(form); form.dispatchEvent(new Event('change', { bubbles: true }));
+      msg.textContent = `Filled ${filled.length} fields from NHTSA vPIC. Review and edit them, then tap Save.${vt ? ` NHTSA type: ${titleCase(vt)}.${/off road/i.test(vt) ? ' Pick ATV or UTV above.' : ''}` : ''}${chk.msg ? ' ' + chk.msg : ''}${r.note ? ' NHTSA note: ' + r.note : ''}`;
     } catch (e) { msg.className = 'vinmsg bad'; msg.textContent = netMsg(e); }
     finally { btn.disabled = false; }
   };
   openForm({
-    title: existing ? 'Edit vehicle' : 'Add vehicle', fields: VEHICLE_FIELDS, values: existing || {}, saveLabel: existing ? 'Save' : 'Add vehicle',
-    onInput: (e, form) => { if (e.target.name === 'vin') { const v = e.target.value.trim().toUpperCase(); const msg = $('#vinMsg', form); if (v.length === 17) { const c = vinCheck(v); msg.className = 'vinmsg ' + (c.valid && !c.msg ? 'good' : 'bad'); msg.textContent = c.valid ? (c.msg || 'VIN looks valid (check digit OK). Tap Look up.') : c.msg; } else { msg.className = 'vinmsg muted'; msg.textContent = `${v.length}/17 characters`; } } },
+    title: existing ? 'Edit vehicle' : 'Add vehicle', fields: VEHICLE_FIELDS, values: existing ? { ...existing, typeL: VT(existing).l, meterL: existing.meter === 'hr' ? 'Hours' : 'Miles' } : { typeL: VTYPES[opts.type || 'car'].l }, saveLabel: existing ? 'Save' : 'Add vehicle',
+    onReady: form => vehOdoLabel(form),
+    onInput: (e, form) => { if (e.target.name === 'typeL' || e.target.name === 'meterL') vehOdoLabel(form); if (e.target.name === 'vin') { const v = e.target.value.trim().toUpperCase(); const msg = $('#vinMsg', form); if (v.length === 17) { const c = vinCheck(v); msg.className = 'vinmsg ' + (c.valid && !c.msg ? 'good' : 'bad'); msg.textContent = c.valid ? (c.msg || 'VIN looks valid (check digit OK). Tap Look up.') : c.msg; } else { msg.className = 'vinmsg muted'; msg.textContent = `${v.length}/17 characters`; } } },
     onClick: (e, form) => { if (e.target.closest('[data-vinlookup]')) { e.preventDefault(); lookup(form); } },
     onSave: vals => {
-      vals.vin = (vals.vin || '').toUpperCase();
+      const typ = vtByLabel(vals.typeL); vals.type = typ; vals.meter = typ === 'boat' ? 'hr' : (typ === 'atv' || typ === 'utv') && vals.meterL === 'Hours' ? 'hr' : 'mi';
+      if (typ !== 'moto') delete vals.cooling;
+      if (existing && (existing.meter || 'mi') !== vals.meter && (existing.fuel.length || Object.values(existing.maint || {}).some(a => a.length))) toast(`Now tracking ${vals.meter === 'hr' ? 'engine hours' : 'miles'}. Earlier readings keep their numbers.`);
+      delete vals.typeL; delete vals.meterL;
+      if ('vin' in vals) vals.vin = (vals.vin || '').toUpperCase();
       if (vals.vin && !vinCheck(vals.vin).valid) { toast('That VIN doesn’t look right. Fix it or clear it to save.'); return false; }
       if (pending) vals.vpic = pending;
       if (existing) Object.assign(existing, vals);
@@ -654,7 +865,7 @@ function fuelForm(v, entry) {
   if (!entry && !last && num(sp.minOctane)) { const o = String(num(sp.minOctane)); if (['87', '89', '91', '93'].includes(o)) values.octane = o; else { values.octane = 'Other'; values.octaneOther = num(sp.minOctane); } }
   let manual = entry ? Math.abs((num(entry.total) ?? 0) - (num(entry.gallons) || 0) * (num(entry.price) || 0)) > 0.011 : false;
   openForm({
-    title: entry ? 'Edit fill-up' : 'Log fill-up', fields: FUEL_FIELDS, values, pool: x => x.fuel, saveLabel: entry ? 'Save' : 'Add fill-up', isNew: !entry,
+    title: entry ? 'Edit fill-up' : 'Log fill-up', fields: fieldsFor(v, FUEL_FIELDS), values, pool: x => x.fuel, saveLabel: entry ? 'Save' : 'Add fill-up', isNew: !entry,
     warn: vals => specWarnings('fuel', vals, v),
     onInput: (e, form) => {
       const n = e.target.name;
@@ -674,7 +885,7 @@ function fuelForm(v, entry) {
     onSave: vals => {
       if (!(vals.gallons > 0)) { toast('Gallons must be more than 0'); return false; }
       if (vals.total == null) vals.total = Math.round(vals.gallons * (vals.price || 0) * 100) / 100;
-      if (v.fuel.some(x => x !== entry && num(x.odo) === vals.odo)) { toast('There’s already a fill-up at that odometer reading'); return false; }
+      if (v.fuel.some(x => x !== entry && num(x.odo) === vals.odo)) { toast(`There’s already a fill-up at that ${isHrs(v) ? 'engine-hours' : 'odometer'} reading`); return false; }
       if (entry) Object.assign(entry, vals); else { v.fuel.push({ id: uid(), ...vals }); toast('Fill-up logged'); }
     },
     onDelete: entry ? () => { v.fuel = v.fuel.filter(x => x !== entry); save(); } : null,
@@ -690,18 +901,18 @@ function maintForm(v, sec, entry, preset) {
   if (preset) Object.assign(values, preset.values || {});
   const ctx = { v, sec, entry, preset };
   openForm({
-    title: `${entry ? 'Edit' : 'Log'} ${sec.noun}`, fields: sec.fields, values, pool: x => x.maint[sec.id], saveLabel: entry ? 'Save' : 'Add entry', isNew: !entry,
+    title: `${entry ? 'Edit' : 'Log'} ${sec.noun}`, fields: fieldsFor(v, sec.fields), values, pool: x => x.maint[sec.id] || [], saveLabel: entry ? 'Save' : 'Add entry', isNew: !entry,
     warn: vals => specWarnings(sec.id, vals, v),
     onReady: (form, refresh) => partsFormInit(form, ctx, refresh),
     onSave: vals => {
       if (partsBeforeSave(vals, ctx) === false) return false;
       let saved = entry;
-      if (entry) Object.assign(entry, vals); else { saved = { id: uid(), created: new Date().toISOString(), ...vals }; v.maint[sec.id].push(saved); toast(`${sec.title} entry added`); }
+      if (entry) Object.assign(entry, vals); else { saved = { id: uid(), created: new Date().toISOString(), ...vals }; (v.maint[sec.id] = v.maint[sec.id] || []).push(saved); toast(`${sec.title} entry added`); }
       partsAfterSave(saved, ctx);
     },
-    onDelete: entry ? () => { v.maint[sec.id] = v.maint[sec.id].filter(x => x !== entry); save(); } : null,
+    onDelete: entry ? () => { v.maint[sec.id] = (v.maint[sec.id] || []).filter(x => x !== entry); save(); } : null,
   });
-  if (sec.id === 'tires') { const t = psiTargets(v); TIRE_POS.forEach(([k]) => { const el = $(`#sheetForm [name="psi.${k}"]`); if (el && t[k]) el.placeholder = `spec ${t[k]}`; }); }
+  if (sec.id === 'tires') { const t = psiTargets(v); TPOS(v).forEach(([k]) => { const el = $(`#sheetForm [name="psi.${k}"]`); if (el && t[k]) el.placeholder = `spec ${t[k]}`; }); }
 }
 function pickSheet(title, items) {
   const d = $('#sheet'), form = $('#sheetForm');
@@ -712,7 +923,7 @@ function pickSheet(title, items) {
   d.onclick = e => { if (e.target === d) d.close(); };
   d.showModal();
 }
-function pickService(v) { pickSheet('Log service', SECTIONS.map(s => ({ title: s.title, icon: s.icon, cls: 'c-' + s.id, run: () => maintForm(v, s) }))); }
+function pickService(v) { pickSheet('Log service', secsFor(v).map(s => ({ title: s.title, icon: s.icon, cls: 'c-' + s.id, run: () => maintForm(v, s) }))); }
 
 async function resetFuel(v) {
   const ch = await ask({
@@ -726,7 +937,7 @@ async function resetFuel(v) {
   }
 }
 async function eraseVehicle(v) {
-  const n = v.fuel.length + SECTIONS.reduce((t, s) => t + v.maint[s.id].length, 0);
+  const n = v.fuel.length + SECTIONS.reduce((t, s) => t + (v.maint[s.id] || []).length, 0);
   const ok = await ask({ title: `Erase ${vname(v)}?`, msg: `This permanently deletes the vehicle and all ${plural(n, 'record')} (fuel and maintenance). This can’t be undone.`, typeToConfirm: 'ERASE',
     buttons: [{ label: 'Erase vehicle', value: true, cls: 'danger', needsType: 1 }, { label: 'Cancel', value: false }] });
   if (!ok) return;
@@ -833,7 +1044,7 @@ function sampleProgram(libId, extra = {}) {
 }
 function loadSample() {
   const P = { shell: sampleProgram('shell', { memberId: '••• 4821', notes: 'Gold status (sample)' }), costco: sampleProgram('costco', { notes: 'Pay with Costco Anywhere Visa (sample)' }), kwik: sampleProgram('kwik') };
-  const v = sampleVehicle(); v.specs = v.specs || {};
+  const v = sampleVehicle(); v.specs = v.specs || {}; SECTIONS.forEach(s => { v.maint[s.id] = v.maint[s.id] || []; });
   const RW = { 'Fuel Rewards': P.shell.id, 'Costco': P.costco.id, 'Kwik Rewards': P.kwik.id };
   v.fuel.forEach(e => { if (e.program && RW[e.program]) { const pid = RW[e.program]; const r = { pid, name: progName(progById(pid)), cpg: e.centsOff ?? null, saved: e.saved ?? null, points: e.points ?? null }; if (r.cpg != null || r.saved != null || r.points != null || e.program === 'Costco') e.rewards = [r]; delete e.centsOff; delete e.saved; delete e.points; } delete e.program; }); db.vehicles.push(v); db.settings.current = v.id; sampleShelf(v); save(); location.hash = '#/dash'; render(); toast('Sample vehicle and programs loaded. Erase them anytime.');
 }
@@ -883,17 +1094,19 @@ function fuelRow(e, s, dim) {
     <div class="e-main"><b>${fdate(e.date)}</b>${e.station ? ` <span class="muted">· ${esc(e.station)}</span>` : ''}
       <div class="e-sub">${fmt(num(e.gallons), 3)} gal @ ${c3(num(e.price))} · ${esc(octLabel(e))} · ${esc(ethLabel(e))}</div>
       <div class="tags">${!e.full ? '<span class="tag warn">Partial</span>' : ''}${e.missed ? '<span class="tag warn">After missed fill</span>' : ''}${rws(e).map(r => `<span class="tag accent">${esc(rwName(r))}</span>`).join('')}${!rws(e).length && e.program ? `<span class="tag accent">${esc(e.program)}</span>` : ''}${sv > 0 ? `<span class="tag good">Saved ${money(sv)}</span>` : ''}${fillPoints(e) ? `<span class="tag accent">+${fmt(fillPoints(e))} pts</span>` : ''}${dim ? '<span class="tag">Before reset</span>' : ''}${e.notes ? `<span class="tag">${esc(e.notes.slice(0, 28))}${e.notes.length > 28 ? '…' : ''}</span>` : ''}</div></div>
-    <div class="e-side"><b>${money(fillTotal(e))}</b><span class="mpg">${mpg ? fmt(mpg, 1) + ' mpg' : '—'}</span><small>${fmt(num(e.odo))} mi</small></div></button>`;
+    <div class="e-side"><b>${money(fillTotal(e))}</b><span class="mpg">${econTxt(UV, mpg)}</span><small>${fmtO(num(e.odo), UV)} ${UM()}</small></div></button>`;
 }
-function viewFuel(v) {
+const EU_LC = v => isHrs(v) ? 'GPH' : 'mpg';
+function viewFuel(v) { return hrsText(viewFuel0(v), v); }
+function viewFuel0(v) {
   const s = fuelStats(v), ins = [...insights(v, s), ...statInsights(v)];
   const list = [...v.fuel].sort((a, b) => num(b.odo) - num(a.odo));
   const reset = v.fuelStatsFrom != null;
   return `<div class="page-title"><h2>Fuel</h2><div class="btn-row"><button class="btn small" data-act="csv" ${v.fuel.length ? '' : 'disabled'}>${I.download} CSV</button><button class="btn small" data-act="resetFuel" ${v.fuel.length ? '' : 'disabled'}>${I.reset} Reset</button></div></div>
     ${reset ? `<div class="banner"><span>Stats restarted ${fdate(v.fuelResetDate)}. Earlier fill-ups are kept but not counted.</span><button class="btn small" data-act="undoReset">Undo</button></div>` : ''}
     <section class="card"><h3>${I.gauge} Fuel economy</h3>
-      <div class="stats">${stat('Average', fmt(s.avgMpg, 1), s.avgMpg ? 'mpg' : '')}${stat('Best', fmt(s.best?.mpg, 1), s.best ? 'mpg' : '')}${stat('Worst', fmt(s.worst?.mpg, 1), s.worst ? 'mpg' : '')}
-      ${stat('Cost / mile', s.cpm ? c3(s.cpm) : '—')}${stat('Est. range', fmt(s.range), s.range ? 'mi' : '')}${stat('Miles', fmt(s.milesTracked))}
+      <div class="stats">${stat('Average', fmt(econVal(v, s.avgMpg), 1), s.avgMpg ? EU_LC(v) : '')}${stat('Best', fmt(econVal(v, s.best?.mpg), 1), s.best ? EU_LC(v) : '')}${stat('Worst', fmt(econVal(v, s.worst?.mpg), 1), s.worst ? EU_LC(v) : '')}
+      ${stat(`Cost / ${UONE(v)}`, s.cpm ? c3(s.cpm) : '—')}${stat('Est. range', fmt(s.range, isHrs(v) ? 1 : 0), s.range ? UM(v) : '')}${stat(isHrs(v) ? 'Hours' : 'Miles', fmt(s.milesTracked, isHrs(v) ? 1 : 0))}
       ${stat('Total spent', money(s.totalSpent))}${stat('Gallons', fmt(s.totalGal, 1))}${stat('Fill-ups', fmt(s.fills.length))}
       ${stat('Pump avg', s.avgPrice ? c3(s.avgPrice) : '—')}${stat('Effective', s.effPrice ? c3(s.effPrice) : '—')}${stat('Saved', money(s.totalSaved))}</div>
       ${s.points ? `<p class="muted" style="margin:10px 0 0;font-size:.85rem">Rewards points earned: <b>${fmt(s.points)}</b></p>` : ''}
@@ -910,7 +1123,7 @@ function viewService(v) {
   const ip = (db.plans || []).filter(p => p.status !== 'installed' && (!p.vid || p.vid === v.id)).length, lo = lowStock().length;
   return `<div class="page-title"><h2>Service</h2></div>
     <div class="quick-links"><a href="#/plan" class="ql">${I.list}<b>Planned parts</b><small>${ip ? plural(ip, 'open item') : 'Plan ahead'}</small></a><a href="#/inventory" class="ql">${I.box}<b>Inventory</b><small>${(db.inventory || []).length ? `${money(invTotals().value, 0)}${lo ? ` · ${lo} low` : ''}` : 'Spare parts'}</small></a>
-      <a href="#/stats" class="ql">${I.chart}<b>Parts life</b><small>Life &amp; cost stats</small></a><a href="#/deep" class="ql">${I.layers}<b>Deep dive</b><small>What affects MPG</small></a></div><div class="tiles">${SECTIONS.map(sec => { const st = sectionStatus(sec, v); const n = v.maint[sec.id].length;
+      <a href="#/stats" class="ql">${I.chart}<b>Parts life</b><small>Life &amp; cost stats</small></a><a href="#/deep" class="ql">${I.layers}<b>Deep dive</b><small>${isHrs(v) ? 'What affects fuel burn' : 'What affects MPG'}</small></a></div><div class="tiles">${secsFor(v).map(sec => { const st = sectionStatus(sec, v); const n = (v.maint[sec.id] || []).length;
     return `<a class="tile" href="#/service/${sec.id}"><span class="sicon c-${sec.id}">${sec.icon}</span><b>${esc(sec.title)}</b><small>${n ? plural(n, 'entry', 'entries') : 'Nothing logged'}</small>${pill(st)}</a>`; }).join('')}</div>`;
 }
 function specCard(sec, v) {
@@ -918,7 +1131,7 @@ function specCard(sec, v) {
   if (sec.id === 'tires') {
     const t = tireSet(v); if (!t) return '';
     const latest = list.find(e => e.tread), lp = list.find(e => e.psi), rot = list.find(e => has(e.services, 'Rotation'));
-    const q = (o, vals) => `<div class="tire4">${TIRE_POS.map(([k, l]) => `<span>${l} <b>${vals[k] ?? '—'}</b></span>`).join('')}</div>`;
+    const q = (o, vals) => `<div class="tire4${vtype(v) === 'moto' ? ' two' : ''}">${TPOS(v).map(([k, l]) => `<span>${l} <b>${vals[k] ?? '—'}</b></span>`).join('')}</div>`;
     return `<section class="card"><h3>Current tires</h3><div class="spec">
       <div><span>Tire</span>${esc([t.brand, t.model].filter(Boolean).join(' ') || '—')}</div><div><span>Size</span>${esc(t.size || '—')} ${esc(t.loadSpeed || '')}</div>
       <div><span>DOT code</span>${esc(t.dot || '—')}</div><div><span>Installed</span>${fdate(t.date)} · ${fmt(num(t.odo))} mi</div>
@@ -950,15 +1163,27 @@ function viewSection(v, sec) {
     ${specCard(sec, v)}
     <section class="card"><div class="card-head"><h3>History</h3></div>
       ${list.length ? `<div class="list">${list.map(e => `<button class="entry" data-act="editMaint" data-sec="${sec.id}" data-id="${e.id}"><div class="e-main"><b>${esc(sec.summary(e))}</b>
-        <div class="e-sub">${fdate(e.date)} · ${fmt(num(e.odo))} mi</div><div class="tags">${sec.chips(e).filter(Boolean).map(c => `<span class="tag">${esc(c)}</span>`).join('')}${e.notes ? `<span class="tag">${esc(e.notes.slice(0, 32))}${e.notes.length > 32 ? '…' : ''}</span>` : ''}</div></div>
+        <div class="e-sub">${fdate(e.date)}${num(e.odo) != null ? ` · ${fmtO(num(e.odo), v)} ${UM(v)}` : ''}</div><div class="tags">${sec.chips(e).filter(Boolean).map(c => `<span class="tag">${esc(c)}</span>`).join('')}${e.notes ? `<span class="tag">${esc(e.notes.slice(0, 32))}${e.notes.length > 32 ? '…' : ''}</span>` : ''}</div></div>
         <div class="e-side">${num(e.cost) ? `<b>${money(num(e.cost))}</b>` : '<small>—</small>'}</div></button>`).join('')}</div>`
         : `<div class="empty">No ${esc(sec.noun)} logged yet.</div>`}</section>`;
+}
+let garageFilter = 'all';
+function garageCard(x, v) {
+  return `<section class="card"><div class="vcard"><span class="sicon c-vt-${vtype(x)}" title="${esc(VT(x).l)}">${VT(x).icon}</span><div class="vinfo"><b>${esc(vname(x))}</b><small>${esc(VT(x).l)} · ${esc(vdesc(x))} · ${fmtO(curOdo(x), x)} ${UM(x)} · ${plural(x.fuel.length, 'fill-up')}</small></div>${x === v ? '<span class="current-badge">Current</span>' : ''}</div>
+      <div class="vactions">${x !== v ? `<button class="btn small primary" data-act="select" data-id="${x.id}">Select</button>` : ''}<button class="btn small" data-act="editVehicle" data-id="${x.id}">${I.edit} Edit</button><button class="btn small" data-act="specsFor" data-id="${x.id}">${I.car} Specs</button><button class="btn small" data-act="resetFuelV" data-id="${x.id}" ${x.fuel.length ? '' : 'disabled'}>${I.reset} Reset fuel</button><button class="btn small ghost-danger" data-act="eraseVehicle" data-id="${x.id}">${I.trash} Erase</button></div></section>`;
+}
+function garageList(v) {
+  const present = VT_ORDER.filter(k => db.vehicles.some(x => vtype(x) === k));
+  if (garageFilter !== 'all' && !present.includes(garageFilter)) garageFilter = 'all';
+  const chips = present.length > 1 ? `<div class="vt-filter" role="radiogroup" aria-label="Filter by type"><label><input type="radio" name="gfilter" value="all" data-act="garageFilter" ${garageFilter === 'all' ? 'checked' : ''}><span>All <small>${db.vehicles.length}</small></span></label>${present.map(k => `<label class="c-vt-${k}"><input type="radio" name="gfilter" value="${k}" data-act="garageFilter" ${garageFilter === k ? 'checked' : ''}><span>${VTYPES[k].icon}${esc(VTYPES[k].l)} <small>${db.vehicles.filter(x => vtype(x) === k).length}</small></span></label>`).join('')}</div>` : '';
+  const groups = present.filter(k => garageFilter === 'all' || garageFilter === k);
+  return chips + groups.map(k => `${present.length > 1 ? `<div class="vt-group c-vt-${k}"><span class="vt-ic">${VTYPES[k].icon}</span><h3>${esc(VTYPES[k].l)}</h3><span class="vt-rule"></span></div>` : ''}${db.vehicles.filter(x => vtype(x) === k).map(x => garageCard(x, v)).join('')}`).join('')
+    + `<button class="btn block add-type" data-act="addVehicle">${I.plus} Add a car, bike, ATV, UTV or boat</button>`;
 }
 function viewGarage() {
   const v = cur();
   return `<div class="page-title"><h2>Garage</h2><button class="btn small primary" data-act="addVehicle">${I.plus} Vehicle</button></div>
-    ${db.vehicles.length ? db.vehicles.map(x => `<section class="card"><div class="vcard"><span class="sicon c-fuel">${I.car}</span><div class="vinfo"><b>${esc(vname(x))}</b><small>${esc(vdesc(x))} · ${fmt(curOdo(x))} mi · ${plural(x.fuel.length, 'fill-up')}</small></div>${x === v ? '<span class="current-badge">Current</span>' : ''}</div>
-      <div class="vactions">${x !== v ? `<button class="btn small primary" data-act="select" data-id="${x.id}">Select</button>` : ''}<button class="btn small" data-act="editVehicle" data-id="${x.id}">${I.edit} Edit</button><button class="btn small" data-act="specsFor" data-id="${x.id}">${I.car} Specs</button><button class="btn small" data-act="resetFuelV" data-id="${x.id}" ${x.fuel.length ? '' : 'disabled'}>${I.reset} Reset fuel</button><button class="btn small ghost-danger" data-act="eraseVehicle" data-id="${x.id}">${I.trash} Erase</button></div></section>`).join('') : emptyGarage()}
+    ${db.vehicles.length ? garageList(v) : emptyGarage()}
     <div id="syncCard">${window.AutoLogSync ? window.AutoLogSync.cardHTML() : ''}</div>
     <section class="card"><h3>Settings &amp; backup</h3>
       <div class="setting"><b>Appearance</b><div class="seg" role="radiogroup">${['auto', 'light', 'dark'].map(t => `<label><input type="radio" name="theme" value="${t}" ${db.settings.theme === t ? 'checked' : ''} data-act="theme"><span>${t[0].toUpperCase() + t.slice(1)}</span></label>`).join('')}</div></div>
@@ -971,7 +1196,7 @@ function viewGarage() {
     </section>${rzFoot()}`;
 }
 /* ---------- RIZNOSS branding ---------- */
-const APP_VERSION = '7';
+const APP_VERSION = '9';
 const rzFoot = () => `<a href="#/about" class="rz-foot"><img src="img/riznoss-crest-solid.webp" alt="" width="26" height="30" loading="lazy" decoding="async"><b>RIZNOSS · Chamber 01</b><span>AutoLog v${APP_VERSION} · works offline · your data stays yours</span><i>Protect ya data.</i></a>`;
 function viewAbout() {
   const n = db.vehicles.length, recs = db.vehicles.reduce((t, v) => t + v.fuel.length + SECTIONS.reduce((u, sc) => u + (v.maint[sc.id] || []).length, 0), 0);
@@ -1122,7 +1347,7 @@ async function decodeVin(vin) {
   const trans = [g('TransmissionStyle'), g('TransmissionSpeeds') ? `${g('TransmissionSpeeds')}-speed` : ''].filter(Boolean).join(', ');
   const fuel = [g('FuelTypePrimary'), g('FuelTypeSecondary') ? `/ ${g('FuelTypeSecondary')}` : '', g('ElectrificationLevel')].filter(Boolean).join(' ');
   const fields = { year: g('ModelYear'), make: titleCase(g('Make')), model: g('Model'), trim: [g('Trim'), g('Series')].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join(' '), engine, fuelType: fuel, drive: g('DriveType'), body: g('BodyClass'), transmission: trans };
-  const raw = { checked: todayISO(), displ, cylinders: num(g('EngineCylinders')), engineModel: g('EngineModel'), turbo: /yes/i.test(g('Turbo')), fuelPrimary: g('FuelTypePrimary'), plant: [g('PlantCity'), g('PlantCountry')].filter(Boolean).join(', '), gvwr: g('GVWR'), doors: g('Doors'), errorCode: g('ErrorCode') };
+  const raw = { checked: todayISO(), vehicleType: g('VehicleType'), displ, cylinders: num(g('EngineCylinders')), engineModel: g('EngineModel'), turbo: /yes/i.test(g('Turbo')), fuelPrimary: g('FuelTypePrimary'), plant: [g('PlantCity'), g('PlantCountry')].filter(Boolean).join(', '), gvwr: g('GVWR'), doors: g('Doors'), errorCode: g('ErrorCode') };
   const code = String(d.ErrorCode || '0');
   const note = code !== '0' && d.ErrorText ? d.ErrorText.replace(/^\d+ - /, '').split(';')[0] : '';
   return { fields, raw, note };
@@ -1200,7 +1425,15 @@ const SPEC_GROUPS = [
     fields: [{ k: 'batteryGroup', l: 'Group size', t: 'text', half: 1, ph: 'e.g. 51R' }, { k: 'batteryCca', l: 'Minimum CCA', t: 'num', step: 1, half: 1 }] },
   { id: 'brakes', title: 'Brakes', q: 'brake fluid type and brake pad minimum thickness', where: 'Brake fluid type is on the master-cylinder reservoir cap. Pad and rotor minimums are in the service manual, and the rotor minimum is often stamped on the rotor.',
     fields: [{ k: 'brakeFluid', l: 'Brake fluid', t: 'select', opts: ['', 'DOT 3', 'DOT 4', 'DOT 5.1', 'DOT 5'], half: 1 }, { k: 'padMinMm', l: 'Pad minimum', t: 'num', unit: 'mm', step: 0.5, half: 1 }, { k: 'rotorMinFront', l: 'Front rotor minimum', t: 'num', unit: 'mm', step: 0.1, half: 1 }, { k: 'brakeIntMiles', l: 'Inspect every', t: 'num', unit: 'mi', step: 1, half: 1 }] },
+  { id: 'drive', title: 'Final drive', types: ['moto'], q: 'chain size sprocket teeth chain slack spec', where: 'Owner’s manual specifications and maintenance pages. Chain size is also stamped on the side plates.',
+    fields: [{ k: 'chainSize', l: 'Chain size / links', t: 'text', half: 1, ph: 'e.g. 520 x 114' }, { k: 'sprockets', l: 'Sprockets (front/rear)', t: 'text', half: 1, ph: 'e.g. 15/45' }, { k: 'chainSlack', l: 'Slack spec', t: 'text', half: 1, ph: 'from your manual' }, { k: 'chainLube', l: 'Lube every', t: 'num', unit: 'mi', step: 1, half: 1 }] },
+  { id: 'drivetrain', title: 'CVT & drivetrain', types: ['atv', 'utv'], q: 'CVT belt part number front differential oil capacity', where: 'Owner’s manual maintenance and specifications pages.',
+    fields: [{ k: 'cvtBeltPart', l: 'CVT belt part #', t: 'text', half: 1 }, { k: 'cvtBeltMin', l: 'Belt width limit', t: 'num', unit: 'mm', step: 0.1, half: 1 }, { k: 'frontDiffCap', l: 'Front diff capacity', t: 'num', unit: 'oz', step: 0.1, half: 1 }, { k: 'rearDiffCap', l: 'Rear diff capacity', t: 'num', unit: 'oz', step: 0.1, half: 1 }, { k: 'diffOil', l: 'Diff / gear oil type', t: 'text' }] },
+  { id: 'marine', title: 'Lower unit & cooling', types: ['boat'], q: 'lower unit gear lube capacity impeller', where: 'Your engine’s owner’s manual (specifications and maintenance schedule).',
+    fields: [{ k: 'lowerUnitCap', l: 'Lower unit lube capacity', t: 'num', unit: 'oz', step: 0.1, half: 1 }, { k: 'lowerUnitLube', l: 'Gear lube type', t: 'text', half: 1 }, { k: 'impellerPart', l: 'Impeller / pump kit #', t: 'text', half: 1 }, { k: 'propSize', l: 'Prop (dia x pitch)', t: 'text', half: 1 }, { k: 'anodeMaterial', l: 'Anode material', t: 'select', opts: ['', 'Zinc', 'Aluminum', 'Magnesium'], half: 1 }, { k: 'hullFuel', l: 'Fuel tank', t: 'num', unit: 'gal', step: 0.1, half: 1 }] },
 ];
+const SPEC_BY_TYPE = { car: ['fuel', 'oil', 'tires', 'plugs', 'coolant', 'filters', 'battery', 'brakes'], moto: ['fuel', 'oil', 'drive', 'tires', 'plugs', 'coolant', 'filters', 'battery', 'brakes'], atv: ['fuel', 'oil', 'drivetrain', 'tires', 'plugs', 'coolant', 'filters', 'battery', 'brakes'], utv: ['fuel', 'oil', 'drivetrain', 'tires', 'plugs', 'coolant', 'filters', 'battery', 'brakes'], boat: ['fuel', 'oil', 'marine', 'plugs', 'battery'] };
+const specGroupsFor = v => SPEC_BY_TYPE[vtype(v)].filter(id => !(id === 'coolant' && v.cooling === 'Air-cooled' && vtype(v) === 'moto')).map(id => SPEC_GROUPS.find(g => g.id === id)).filter(Boolean);
 const specFieldsAll = SPEC_GROUPS.flatMap(g => g.fields);
 const searchUrl = (v, q) => `https://www.google.com/search?q=${encodeURIComponent(`${[v.year, v.make, v.model].filter(Boolean).join(' ')} owner's manual ${q}`)}`;
 const psiTargets = v => { const f = num(v.specs?.psiFront), r = num(v.specs?.psiRear) || f; return { fl: f, fr: f, rl: r, rr: r }; };
@@ -1235,7 +1468,7 @@ function specWarnings(secId, vals, v) {
 function specForm(v, gid) {
   if (!v.specs) v.specs = {};
   const g = SPEC_GROUPS.find(x => x.id === gid);
-  openForm({ title: `${g.title} specs`, fields: [{ k: 'h0', t: 'hint', l: `Where to find this: ${g.where}` }, ...g.fields], values: { ...v.specs }, saveLabel: 'Save specs',
+  openForm({ title: `${g.title} specs`, fields: [{ k: 'h0', t: 'hint', l: `Where to find this: ${g.where}` }, ...fieldsFor(v, g.fields)], values: { ...v.specs }, saveLabel: 'Save specs',
     onSave: vals => { delete vals.h0; Object.assign(v.specs, vals); if (gid === 'fuel') v.specs.fuelGradeSrc = 'you'; toast(`${g.title} specs saved`); } });
 }
 const specVal = (f, val) => val == null || val === '' ? '<span class="muted">Not set</span>' : esc(`${val}${f.unit ? ' ' + f.unit : ''}`);
@@ -1246,20 +1479,20 @@ function viewSpecs(v) {
   return `<a href="#/dash" class="back">${I.back} Dashboard</a>
     <div class="page-title"><h2>Specs</h2><span class="muted">${esc(vname(v))}</span></div>
     <section class="card"><div class="card-head"><h3>${I.oil} Capacities &amp; fitment</h3>${vehProfile(v) ? '<span class="tag">Owner’s manual on file</span>' : ''}</div>
-      <div class="fit-cards">${['oil', 'plugs', 'battery', 'tires', 'airFilter', 'cabinFilter'].map(c => `<div><div class="fc-t">${CAT[c].icon} ${esc(CAT[c].label)}</div>${fitStatic(c, v, { short: 1 })}</div>`).join('')}</div>
+      ${vtype(v) !== 'car' ? `<p class="muted" style="margin:0;font-size:.88rem">The parts catalog covers cars and trucks only. For a ${esc(VT(v).l.toLowerCase())}, enter capacities and part numbers from your owner’s manual below; AutoLog doesn’t guess them.</p>` : ''}<div class="fit-cards"${vtype(v) !== 'car' ? ' hidden' : ''}>${['oil', 'plugs', 'battery', 'tires', 'airFilter', 'cabinFilter'].map(c => `<div><div class="fc-t">${CAT[c].icon} ${esc(CAT[c].label)}</div>${fitStatic(c, v, { short: 1 })}</div>`).join('')}</div>
       ${vehProfile(v) && vehProfile(v).specs ? `<details class="where"><summary>Source</summary><p>${esc(vehProfile(v).specs.note || '')}</p>${vehProfile(v).specs.src ? `<a href="${esc(vehProfile(v).specs.src)}" target="_blank" rel="noopener noreferrer">${I.link} Owner’s manual PDF</a>` : ''}</details>` : ''}</section>
-    <section class="card"><div class="card-head"><h3>${I.car} Vehicle details</h3><span class="tag">${vp ? 'NHTSA vPIC' : 'Manual'}</span></div>
-      <div class="spec">${row('VIN', v.vin)}${row('Year / make / model', [v.year, v.make, v.model].filter(Boolean).join(' '))}${row('Trim', v.trim)}${row('Engine', v.engine)}${row('Fuel type', v.fuelType)}${row('Drive', v.drive)}${row('Body', v.body)}${row('Transmission', v.transmission)}</div>
-      <div class="row-actions"><button class="btn" data-act="vinLookup" data-id="${v.id}">${I.search} ${v.vin ? 'Re-run VIN lookup' : 'Look up by VIN'}</button>${v.vin && vinCheck(v.vin).valid ? `<a class="btn" href="https://www.nhtsa.gov/recalls?vin=${encodeURIComponent(v.vin)}" target="_blank" rel="noopener noreferrer">${I.link} Recalls</a>` : ''}</div>
+    <section class="card"><div class="card-head"><h3>${VT(v).icon} ${vtype(v) === 'boat' ? 'Boat' : 'Vehicle'} details</h3><span class="tag">${vp ? 'NHTSA vPIC' : 'Manual'}</span></div>
+      <div class="spec">${vtype(v) === 'boat' ? row('HIN', v.hin) : row('VIN', v.vin)}${row('Type', VT(v).l + (isHrs(v) ? ' · engine hours' : ''))}${row('Year / make / model', [v.year, v.make, v.model].filter(Boolean).join(' '))}${row('Trim', v.trim)}${row('Engine', v.engine)}${row('Fuel type', v.fuelType)}${row('Drive', v.drive)}${row('Body', v.body)}${row('Transmission', v.transmission)}</div>
+      <div class="row-actions"${vtype(v) === 'boat' ? ' hidden' : ''}><button class="btn" data-act="vinLookup" data-id="${v.id}">${I.search} ${v.vin ? 'Re-run VIN lookup' : 'Look up by VIN'}</button>${v.vin && vinCheck(v.vin).valid ? `<a class="btn" href="https://www.nhtsa.gov/recalls?vin=${encodeURIComponent(v.vin)}" target="_blank" rel="noopener noreferrer">${I.link} Recalls</a>` : ''}</div>
       ${vp?.checked ? `<div class="insights-note">Decoded from NHTSA vPIC on ${fdate(vp.checked)}. NHTSA only fills fields the manufacturer reported.</div>` : ''}</section>
-    <section class="card"><div class="card-head"><h3>${I.gauge} EPA fuel economy</h3><span class="tag">fueleconomy.gov</span></div>
+    <section class="card"${vtype(v) !== 'car' ? ' hidden' : ''}><div class="card-head"><h3>${I.gauge} EPA fuel economy</h3><span class="tag">fueleconomy.gov</span></div>
       ${e ? `<div class="stats">${stat('City', fmt(e.city), 'mpg')}${stat('Highway', fmt(e.hwy), 'mpg')}${stat('Combined', fmt(e.comb), 'mpg')}</div>
         <div class="spec" style="margin-top:12px">${row('EPA fuel', e.fuelType1 || e.fuelType)}${row('Your average', s.avgMpg ? `${fmt(s.avgMpg, 1)} mpg (${s.avgMpg >= e.comb ? '+' : ''}${fmt((s.avgMpg - e.comb) / e.comb * 100, 0)}% vs combined)` : 'Log 2 full fills')}<div class="wide"><span>Matched version</span>${esc(`${e.year} ${e.make} ${e.model} · ${e.option}`)}</div></div>
         <div class="row-actions"><button class="btn" data-act="epa" data-id="${v.id}">Change match</button><a class="btn" href="https://www.fueleconomy.gov/feg/noframes/${encodeURIComponent(e.id)}.shtml" target="_blank" rel="noopener noreferrer">${I.link} EPA page</a></div>`
       : `<p class="muted" style="margin:0 0 12px">Get the official city, highway, and combined MPG and the recommended fuel, then compare them with your real-world MPG.</p><button class="btn primary block" data-act="epa" data-id="${v.id}">${I.search} Find EPA rating</button>`}</section>
     <section class="card"><div class="card-head"><h3>${I.wrench} Owner’s manual specs</h3><a class="link" style="margin:0" href="${searchUrl(v, 'pdf')}" target="_blank" rel="noopener noreferrer">Find manual</a></div>
       <p class="muted" style="margin:0 0 6px;font-size:.88rem">No free database reliably provides these, so AutoLog doesn’t guess. Enter them from your owner’s manual or door jamb, and they’ll pre-fill your service forms and flag mismatches.</p>
-      ${SPEC_GROUPS.map(g => `<div class="specgrp"><div class="card-head" style="margin:0 0 8px"><b>${esc(g.title)}${g.id === 'fuel' && v.specs.fuelGradeSrc === 'EPA' ? ' <span class="tag">from EPA</span>' : ''}</b><button class="btn small" data-act="specEdit" data-id="${g.id}">${I.edit} Edit</button></div>
+      ${specGroupsFor(v).map(g => ({ ...g, fields: fieldsFor(v, g.fields) })).map(g => `<div class="specgrp"><div class="card-head" style="margin:0 0 8px"><b>${esc(g.title)}${g.id === 'fuel' && v.specs.fuelGradeSrc === 'EPA' ? ' <span class="tag">from EPA</span>' : ''}</b><button class="btn small" data-act="specEdit" data-id="${g.id}">${I.edit} Edit</button></div>
         <div class="spec">${g.fields.map(f => `<div><span>${esc(f.l)}</span>${specVal(f, v.specs[f.k])}</div>`).join('')}</div>
         <details class="where"><summary>Where to find this</summary><p>${esc(g.where)}</p><a href="${searchUrl(v, g.q)}" target="_blank" rel="noopener noreferrer">${I.search} Search “${esc([v.year, v.make, v.model].filter(Boolean).join(' '))} ${esc(g.q)}”</a></details></div>`).join('')}
     </section>`;
@@ -1283,6 +1516,8 @@ function reminderItems(v) {
   push('plugs', 'Spark plugs', L('plugs')[0]);
   push('airFilter', 'Engine air filter', SEC.airFilter.anchor(L('airFilter')));
   push('cabinFilter', 'Cabin air filter', SEC.cabinFilter.anchor(L('cabinFilter')));
+  ['chain', 'cvt', 'gearOil', 'lowerUnit', 'impeller', 'fuelSep', 'anodes', 'trailer', 'winterize'].forEach(id => push(id, SEC[id].title, SEC[id].anchor ? SEC[id].anchor(L(id)) : L(id)[0]));
+  L('custom').forEach((e, i, a) => { if (a.findIndex(x => (x.what || '').trim().toLowerCase() === (e.what || '').trim().toLowerCase()) === i) push('custom', e.what || 'Other service', e); });
   const b = batteryCur(v), exp = wExp(b);
   if (exp && exp >= today) { const dl = daysBetween(today, exp); out.push({ key: `${v.id}:battery:warranty`, vid: v.id, vname: vname(v), sec: 'battery', title: 'Battery warranty ends', level: dl <= 60 ? 'soon' : 'ok', dueDate: exp, effDate: exp, info: true }); }
   return out;
@@ -1294,7 +1529,8 @@ function reminderText(i) {
   if (i.info) return `Warranty ends ${fdate(i.dueDate)}`;
   if (i.stock) return `${i.qtyText} left (alert at ${fmt2(num(i.low))})`;
   const parts = [];
-  if (i.dueOdo != null) parts.push(`at ${fmt(i.dueOdo)} mi${i.milesLeft != null ? ` (${i.milesLeft <= 0 ? fmt(-i.milesLeft) + ' mi overdue' : fmt(i.milesLeft) + ' mi left'}${i.estDate && i.milesLeft > 0 ? `, about ${fdate(i.estDate)}` : ''})` : ''}`);
+  const rv = db.vehicles.find(x => x.id === i.vid), um = UM(rv);
+  if (i.dueOdo != null) parts.push(`at ${fmtO(i.dueOdo, rv)} ${um}${i.milesLeft != null ? ` (${i.milesLeft <= 0 ? fmtO(-i.milesLeft, rv) + ' ' + um + ' overdue' : fmtO(i.milesLeft, rv) + ' ' + um + ' left'}${i.estDate && i.milesLeft > 0 ? `, about ${fdate(i.estDate)}` : ''})` : ''}`);
   if (i.dueDate) parts.push(`by ${fdate(i.dueDate)}`);
   return 'Due ' + parts.join(' or ');
 }
@@ -1410,6 +1646,13 @@ const CAT = {
   cabinFilter: { label: 'Cabin air filter', sec: 'cabinFilter', unit: 'each', icon: I.cabin },
   coolant: { label: 'Coolant', sec: 'coolant', unit: 'gal', icon: I.coolant },
   brakes: { label: 'Brake pads / rotors', sec: 'brakes', unit: 'set', icon: I.brakes },
+  chain: { label: 'Chain / sprockets / belt', sec: 'chain', unit: 'each', icon: I.chain },
+  cvtBelt: { label: 'CVT belt', sec: 'cvt', unit: 'each', icon: I.cvt },
+  gearOil: { label: 'Gear oil / lube', sec: 'gearOil', unit: 'each', icon: I.gear },
+  impeller: { label: 'Impeller / pump kit', sec: 'impeller', unit: 'each', icon: I.impeller },
+  fuelSep: { label: 'Fuel / water separator', sec: 'fuelSep', unit: 'each', icon: I.fuelSep },
+  anodes: { label: 'Anodes', sec: 'anodes', unit: 'each', icon: I.anode },
+  trailer: { label: 'Trailer parts', sec: 'trailer', unit: 'each', icon: I.trailer },
   other: { label: 'Other part', sec: null, unit: 'each', icon: I.box },
 };
 let CATALOG = { items: [], vehicles: {}, sources: {}, generatedAt: null };
@@ -1459,7 +1702,7 @@ const PICK_KEYS = ['oilPick', 'filterPick', 'plugPick', 'coilPick', 'batPick', '
 const pk = (brand, part) => normS(brand) + '|' + normS(part);
 const paidIndex = memo(() => {
   const m = new Map(), add = (k, r) => { if (!k || !(r.unit > 0)) return; const a = m.get(k) || []; a.push(r); m.set(k, a); };
-  db.vehicles.forEach(v => SECTIONS.forEach(s => v.maint[s.id].forEach(e => PICK_KEYS.forEach(k => { const p = e[k]; if (p && p.unitPrice > 0 && !p.inv) { const r = { unit: p.unitPrice, date: e.date, retailer: p.retailer, url: p.url, where: 'entry' }; add(p.id, r); add(pk(p.brand, p.part), r); } }))));
+  db.vehicles.forEach(v => SECTIONS.forEach(s => (v.maint[s.id] || []).forEach(e => PICK_KEYS.forEach(k => { const p = e[k]; if (p && p.unitPrice > 0 && !p.inv) { const r = { unit: p.unitPrice, date: e.date, retailer: p.retailer, url: p.url, where: 'entry' }; add(p.id, r); add(pk(p.brand, p.part), r); } }))));
   (db.inventory || []).forEach(x => { if (num(x.price) > 0) { const r = { unit: num(x.price), date: x.date, retailer: x.retailer, url: x.url, where: 'inventory' }; add(x.itemId, r); add(pk(x.brand, x.part), r); } });
   (db.plans || []).forEach(x => { if (num(x.paid) > 0 && num(x.qty) > 0) { const r = { unit: num(x.paid) / num(x.qty), date: x.paidDate, retailer: x.retailer, url: x.url, where: 'plan' }; add(x.itemId, r); add(pk(x.brand, x.part), r); } });
   m.forEach(a => a.sort((x, y) => String(y.date || '').localeCompare(String(x.date || ''))));
@@ -1693,7 +1936,7 @@ function invStats(x) {
 }
 const lowStock = () => (db.inventory || []).filter(x => invStats(x).low);
 const invTotals = () => (db.inventory || []).reduce((t, x) => { const s = invStats(x); t.value += s.value; t.cost += s.cost; t.n++; if (s.low) t.low++; return t; }, { value: 0, cost: 0, n: 0, low: 0 });
-function pickCategory(title, run, cats = ['oil', 'oilFilter', 'plugs', 'coils', 'battery', 'tires', 'airFilter', 'cabinFilter', 'coolant', 'brakes', 'other']) {
+function pickCategory(title, run, cats = ['oil', 'oilFilter', 'plugs', 'coils', 'battery', 'tires', 'airFilter', 'cabinFilter', 'coolant', 'brakes', 'chain', 'cvtBelt', 'gearOil', 'impeller', 'fuelSep', 'anodes', 'trailer', 'other']) {
   pickSheet(title, cats.map(c => ({ title: CAT[c].label, icon: CAT[c].icon, cls: 'c-' + (CAT[c].sec || 'fuel'), sub: itemsFor(c).length ? `${itemsFor(c).length} in catalog` : 'Custom entry', run: () => run(c) })));
 }
 function invForm(x, cat) {
@@ -1763,7 +2006,7 @@ function planForm(p, cat) {
     { k: 'notes', l: 'Notes', t: 'textarea' },
   ];
   const values = p ? { ...p, remKey: (rems.find(r => r.key === p.remKey) || {}).title || '' } : { ...defaults(fields), remKey: (rems.find(r => r.sec === CAT[cat].sec) || {}).title || '' };
-  openForm({ title: p ? 'Edit planned part' : `Plan ${CAT[cat].label.toLowerCase()}`, fields, values, saveLabel: p ? 'Save' : 'Add to plan',
+  openForm({ title: p ? 'Edit planned part' : `Plan ${CAT[cat].label.toLowerCase()}`, fields: v ? fieldsFor(v, fields) : fields, values, saveLabel: p ? 'Save' : 'Add to plan',
     onReady: (form, refresh) => partsFormInit(form, { v: v || { specs: {}, maint: {}, fuel: [] }, sec: null }, refresh),
     onSave: vals => {
       const s = vals.pick; delete vals.pick; const it = s && s.id ? itemById(s.id) : null; const pi = it ? priceInfo(it) : null;
@@ -1816,7 +2059,7 @@ function viewPlan(all) {
   const rems = new Map(allReminders().map(r => [r.key, r]));
   const row = p => { const pp = planPrice(p), st = planStock(p), r = rems.get(p.remKey), pv = db.vehicles.find(x => x.id === p.vid);
     return `<div class="entry plan"><span class="sicon c-${CAT[p.cat]?.sec || 'fuel'}">${CAT[p.cat]?.icon || I.box}</span><div class="e-main"><b>${esc(p.brand)} ${esc(p.part)}</b> <span class="pill ${planLvl(p)}">${PLAN_LBL[p.status]}</span>
-      <div class="e-sub">${fmt2(num(p.qty) || 1)} ${esc(p.unit || 'each')}${all && pv ? ' · ' + esc(vname(pv)) : ''}${p.targetDate ? ' · by ' + fdate(p.targetDate) : ''}${num(p.targetOdo) ? ' · at ' + fmt(num(p.targetOdo)) + ' mi' : ''}${r ? ' · ' + esc(r.title) + ': ' + esc(reminderText(r)) : ''}</div>
+      <div class="e-sub">${fmt2(num(p.qty) || 1)} ${esc(p.unit || 'each')}${all && pv ? ' · ' + esc(vname(pv)) : ''}${p.targetDate ? ' · by ' + fdate(p.targetDate) : ''}${num(p.targetOdo) ? ' · at ' + fmt(num(p.targetOdo)) + ' ' + UM(pv || cur()) : ''}${r ? ' · ' + esc(r.title) + ': ' + esc(reminderText(r)) : ''}</div>
       <div class="tags">${p.status === 'planned' ? (pp.unit != null ? `<span class="tag accent">Now ${money(pp.unit)} ea · ${money(pp.total)} total (${esc(priceSrcLabel(pp))})</span>` : '<span class="tag">No current price</span>') : ''}${p.status === 'planned' && pp.change != null && Math.abs(pp.change) >= 0.005 ? `<span class="tag ${pp.change < 0 ? 'good' : 'warn'}">${pp.change < 0 ? '▼' : '▲'} ${fmt(Math.abs(pp.change * 100), 0)}% since added</span>` : ''}${p.paid != null ? `<span class="tag">Paid ${money(p.paid)}${p.paidDate ? ' · ' + fdateS(p.paidDate) : ''}</span>` : ''}${st > 0 ? `<span class="tag good">In stock: ${fmt2(st)}</span>` : ''}${p.notes ? `<span class="tag">${esc(p.notes.slice(0, 30))}</span>` : ''}</div>
       ${pp.offers && pp.offers.length && p.status === 'planned' ? `<div class="offers">${pp.offers.map(o => `<a href="${esc(o.url)}" target="_blank" rel="noopener noreferrer">${esc(o.retailer)} ${money(o.unitPrice)}</a>`).join('')}</div>` : ''}
       <div class="btn-row" style="margin-top:8px">${p.status === 'planned' ? `<button class="btn small" data-act="planBuy" data-id="${p.id}">${I.check} Bought</button>` : ''}${p.status !== 'installed' ? `<button class="btn small primary" data-act="planInstall" data-id="${p.id}">${I.wrench} Install</button>` : ''}<button class="btn small" data-act="planEdit" data-id="${p.id}">${I.edit} Edit</button></div></div></div>`; };
@@ -1877,11 +2120,13 @@ const SYS = [
 const SLOT = { oil: 'Engine oil & filter', coolant: 'Coolant', plugs: 'Spark plugs', wires: 'Plug wires', coils: 'Ignition coils', battery: 'Battery', airFilter: 'Engine air filter', cabinFilter: 'Cabin air filter',
   'tire:FL': 'Tire, front left', 'tire:FR': 'Tire, front right', 'tire:RL': 'Tire, rear left', 'tire:RR': 'Tire, rear right', 'tire:Spare': 'Spare tire', 'pads:Front': 'Front brake pads', 'pads:Rear': 'Rear brake pads', 'rotors:Front': 'Front rotors', 'rotors:Rear': 'Rear rotors' };
 const slotFamily = s => s.split(':')[0];
+const MOTO_SLOT = { 'tire:FL': 'Front tire', 'tire:RL': 'Rear tire', 'pads:Front': 'Front brake pads', 'pads:Rear': 'Rear brake pads' };
+const slotLabel = (slot, v) => (vtype(v) === 'moto' && MOTO_SLOT[slot]) || SLOT[slot] || slot;
 const FAMILY = { oil: 'Engine oil', coolant: 'Coolant', plugs: 'Spark plugs', wires: 'Plug wires', coils: 'Ignition coils', battery: 'Batteries', tire: 'Tires', pads: 'Brake pads', rotors: 'Rotors', airFilter: 'Engine air filters', cabinFilter: 'Cabin air filters' };
 const famSec = { oil: 'oil', coolant: 'coolant', plugs: 'plugs', wires: 'plugs', coils: 'plugs', battery: 'battery', tire: 'tires', pads: 'brakes', rotors: 'brakes', airFilter: 'airFilter', cabinFilter: 'cabinFilter' };
 const ecost = e => num(e.cost) || 0;
 function componentsOf(v) {
-  const out = [], add = (slot, e, o) => out.push({ key: `${e.id}:${slot}`, vid: v.id, slot, fam: slotFamily(slot), label: SLOT[slot] || slot, entry: e, inst: { date: e.date, odo: num(e.odo) }, intMiles: num(e.intMiles), intMonths: num(e.intMonths), ...o });
+  const out = [], add = (slot, e, o) => out.push({ key: `${e.id}:${slot}`, vid: v.id, slot, fam: slotFamily(slot), label: slotLabel(slot, v), entry: e, inst: { date: e.date, odo: num(e.odo) }, intMiles: num(e.intMiles), intMonths: num(e.intMonths), ...o });
   const pc = (e, k) => e[k] && num(e[k].cost) != null ? num(e[k].cost) : null;
   const invInfo = (e, k) => { const s = e[k]; if (!s || !s.inv) return null; const x = (db.inventory || []).find(y => y.id === s.inv.id); const bought = x && x.date; return { invId: s.inv.id, shelfDays: bought ? daysBetween(bought, e.date) : null, bought, unitPaid: s.unitPrice, nowUnit: x ? (invMarket(x) || {}).unit ?? null : null }; };
   for (const e of v.maint.oil) add('oil', e, { brand: e.brand, part: [e.viscosity, e.oilType].filter(Boolean).join(' '), detail: [e.filterBrand, e.filterPart].filter(Boolean).join(' ') && `Filter ${[e.filterBrand, e.filterPart].filter(Boolean).join(' ')}`, cost: ecost(e), inv: invInfo(e, 'oilPick') });
@@ -1894,7 +2139,8 @@ function componentsOf(v) {
   }
   for (const e of v.maint.battery) if (has(e.events, 'New battery')) add('battery', e, { brand: e.brand, part: e.model, detail: [e.group && `group ${e.group}`, e.cca && `${e.cca} CCA`].filter(Boolean).join(' · '), cost: ecost(e), warranty: num(e.warranty), inv: invInfo(e, 'batPick') });
   for (const e of v.maint.tires) if (has(e.services, 'New tires')) {
-    const pos = Array.isArray(e.positions) && e.positions.length ? e.positions : (num(e.count) && num(e.count) < 4 ? ['FL', 'FR', 'RL', 'RR'].slice(0, num(e.count)) : ['FL', 'FR', 'RL', 'RR']);
+    const all4 = vtype(v) === 'moto' ? ['FL', 'RL'] : ['FL', 'FR', 'RL', 'RR'];
+    const pos = Array.isArray(e.positions) && e.positions.length ? e.positions : (num(e.count) && num(e.count) < all4.length ? all4.slice(0, num(e.count)) : all4);
     pos.forEach(p => add('tire:' + p, e, { brand: e.brand, part: [e.model, e.size].filter(Boolean).join(' '), detail: [e.loadSpeed, e.dot && `DOT ${e.dot}`].filter(Boolean).join(' · '), cost: ecost(e) / pos.length, est: pos.length > 1, inv: invInfo(e, 'tirePick') }));
   }
   for (const e of v.maint.brakes) {
@@ -1941,8 +2187,8 @@ function health(c, v) {
   else if (c.fam === 'pads' && c.lastPad != null) { const mn = num(sp.padMinMm) || 3; frac = (c.lastPad - mn) / (11 - mn); basis = `${c.lastPad} mm pads`; if (c.wear && c.wear.rate > 0.01) nextTxt = `~${fmt(Math.max(0, (c.lastPad - mn) / c.wear.rate * 1000), 0)} mi to ${mn} mm`; }
   else if (c.fam === 'battery') { const age = (c.days || 0) / 365.25; frac = 1 - age / 5; basis = `${fmt(age, 1)} yrs old (typical life 3–5 yrs)`; if (c.lastVolt != null && c.lastVolt < 12.4) frac = Math.min(frac, c.lastVolt < 12.2 ? 0 : 0.15); }
   if (frac == null && (c.intMiles || c.intMonths)) { const fm = c.intMiles ? (c.miles || 0) / c.intMiles : 0, fd = c.intMonths ? (c.days || 0) / (c.intMonths * 30.44) : 0; frac = 1 - Math.max(fm, fd);
-    basis = [c.intMiles && `${fmt(c.miles)} of ${fmt(c.intMiles)} mi`, c.intMonths && `${fmt((c.days || 0) / 30.44, 0)} of ${c.intMonths} mo`].filter(Boolean).join(' · ');
-    const dueO = c.intMiles ? c.inst.odo + c.intMiles : null, dueD = c.intMonths ? addMonths(c.inst.date, c.intMonths) : null; nextTxt = [dueO && `${fmt(dueO)} mi`, dueD && fdate(dueD)].filter(Boolean).join(' or '); if (nextTxt) nextTxt = 'Next due ' + nextTxt; }
+    basis = [c.intMiles && `${fmt(c.miles)} of ${fmtO(c.intMiles, v)} ${UM(v)}`, c.intMonths && `${fmt((c.days || 0) / 30.44, 0)} of ${c.intMonths} mo`].filter(Boolean).join(' · ');
+    const dueO = c.intMiles ? c.inst.odo + c.intMiles : null, dueD = c.intMonths ? addMonths(c.inst.date, c.intMonths) : null; nextTxt = [dueO && `${fmtO(dueO, v)} ${UM(v)}`, dueD && fdate(dueD)].filter(Boolean).join(' or '); if (nextTxt) nextTxt = 'Next due ' + nextTxt; }
   if (frac == null) return { level: 'ok', label: 'Installed', frac: null, basis: 'No interval or measurements to estimate life', next: nextTxt };
   frac = Math.max(0, Math.min(1, frac)); const level = frac <= 0 ? 'over' : frac <= 0.15 ? 'soon' : 'ok';
   return { level, label: level === 'over' ? 'Replace' : level === 'soon' ? 'Soon' : `${fmt(frac * 100, 0)}% left`, frac, basis, next: nextTxt };
@@ -2014,18 +2260,20 @@ const deepCache = new Map();
 const deepFor = v => { const k = v.id + ':' + DBV; if (!deepCache.has(k)) { deepCache.clear(); deepCache.set(k, deepDive(v)); } return deepCache.get(k); };
 /* ---- total cost of ownership ---- */
 const TCO_CATS = [['fuel', 'Fuel', 'var(--c-fuel)'], ['oil', 'Oil', 'var(--c-oil)'], ['tires', 'Tires', 'var(--c-tires)'], ['brakes', 'Brakes', 'var(--c-brakes)'], ['battery', 'Battery', 'var(--c-battery)'], ['plugs', 'Plugs / wires', 'var(--c-plugs)'], ['coolant', 'Coolant', 'var(--c-coolant)'], ['filters', 'Filters', 'var(--c-air)'], ['other', 'Other parts', 'var(--muted)']];
-const secCat = id => id === 'airFilter' || id === 'cabinFilter' ? 'filters' : id;
+const secCat = id => id === 'airFilter' || id === 'cabinFilter' || id === 'fuelSep' ? 'filters' : ['oil', 'tires', 'brakes', 'battery', 'plugs', 'coolant'].includes(id) ? id : 'other';
 function tcoOf(vs) {
-  const by = Object.fromEntries(TCO_CATS.map(([k]) => [k, 0])), months = new Map(); let first = null, odoMin = null, odoMax = 0;
+  const by = Object.fromEntries(TCO_CATS.map(([k]) => [k, 0])), months = new Map(); let first = null, odoMin = null, odoMax = 0, miles = 0, hours = 0, costMi = 0, costHr = 0;
   const addM = (d, k, x) => { if (!d || !x) return; const m = d.slice(0, 7), o = months.get(m) || { fuel: 0, maint: 0 }; o[k === 'fuel' ? 'fuel' : 'maint'] += x; months.set(m, o); };
   const seen = (d, o) => { if (d && (!first || d < first)) first = d; if (o != null) { odoMin = odoMin == null ? o : Math.min(odoMin, o); odoMax = Math.max(odoMax, o); } };
-  vs.forEach(v => { v.fuel.forEach(e => { const c = fillTotal(e) - fillSaved(e); by.fuel += c; addM(e.date, 'fuel', c); seen(e.date, num(e.odo)); });
-    SECTIONS.forEach(s => v.maint[s.id].forEach(e => { const c = ecost(e); by[secCat(s.id)] += c; addM(e.date, s.id, c); seen(e.date, num(e.odo)); }));
+  vs.forEach(v => { odoMin = null; odoMax = 0; const before = Object.values(by).reduce((a, b) => a + b, 0); v.fuel.forEach(e => { const c = fillTotal(e) - fillSaved(e); by.fuel += c; addM(e.date, 'fuel', c); seen(e.date, num(e.odo)); });
+    SECTIONS.forEach(s => (v.maint[s.id] || []).forEach(e => { const c = ecost(e); by[secCat(s.id)] += c; addM(e.date, s.id, c); seen(e.date, num(e.odo)); }));
     (db.plans || []).filter(p => p.vid === v.id && p.status === 'bought' && !p.invId && num(p.paid)).forEach(p => { by.other += num(p.paid); addM(p.paidDate, 'other', num(p.paid)); });
-    odoMax = Math.max(odoMax, curOdo(v)); });
-  const total = Object.values(by).reduce((a, b) => a + b, 0), days = first ? Math.max(1, daysBetween(first, todayISO())) : 0, miles = odoMin != null ? odoMax - odoMin : 0;
+    odoMax = Math.max(odoMax, curOdo(v));
+    const span = odoMin != null ? odoMax - odoMin : 0, spent = Object.values(by).reduce((a, b) => a + b, 0) - before; // per-vehicle distance, split by meter
+    if (isHrs(v)) { hours += span; costHr += spent; } else { miles += span; costMi += spent; } });
+  const total = Object.values(by).reduce((a, b) => a + b, 0), days = first ? Math.max(1, daysBetween(first, todayISO())) : 0;
   const trend = []; const d0 = new Date(); for (let i = 11; i >= 0; i--) { const d = new Date(d0.getFullYear(), d0.getMonth() - i, 1), k = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; trend.push({ k, ...(months.get(k) || { fuel: 0, maint: 0 }) }); }
-  return { by, total, days, miles, first, perMile: miles > 0 ? total / miles : null, perMonth: days >= 28 ? total / (days / 30.44) : null, perYear: days >= 28 ? total / (days / 365.25) : null, trend };
+  return { by, total, days, miles, hours, first, perMile: miles > 0 ? costMi / miles : null, perHour: hours > 0 ? costHr / hours : null, hasMi: vs.some(x => !isHrs(x)), hasHr: vs.some(x => isHrs(x)), perMonth: days >= 28 ? total / (days / 30.44) : null, perYear: days >= 28 ? total / (days / 365.25) : null, trend };
 }
 function projection(vs) {
   const today = todayISO(), horizon = addDays(today, 365), items = []; let fuel = 0;
@@ -2077,7 +2325,7 @@ function exportStatsCSV(v) {
   L.push(''); row(['section', 'event', 'date', 'n_before', 'n_after', 'mpg_before', 'mpg_after', 'diff', 'welch_p', 'mann_whitney_p']);
   dd.ba.forEach(b => row(['before_after', b.label, b.date, b.nb, b.na, f(b.mb), f(b.ma), f(b.d), f(b.t?.p, 4), f(b.mw?.p, 4)]));
   if (dd.ols) { L.push(''); row(['section', 'term', 'coef', 'se', 'p', 'n', 'r2', 'adj_r2']); dd.ols.names.forEach((n, i) => row(['regression', n, f(dd.ols.beta[i], 4), f(dd.ols.se[i], 4), f(dd.ols.p[i], 4), dd.ols.n, f(dd.ols.r2, 3), f(dd.ols.adjR2, 3)])); }
-  const t = tcoOf([v]); L.push(''); row(['section', 'category', 'amount']); TCO_CATS.forEach(([k, l]) => row(['tco', l, f(t.by[k])])); row(['tco', 'Total', f(t.total)]); row(['tco', 'Per mile', f(t.perMile, 4)]); row(['tco', 'Per month', f(t.perMonth)]); row(['tco', 'Per year', f(t.perYear)]);
+  const t = tcoOf([v]); L.push(''); row(['section', 'category', 'amount']); TCO_CATS.forEach(([k, l]) => row(['tco', l, f(t.by[k])])); row(['tco', 'Total', f(t.total)]); row(['tco', isHrs(v) ? 'Per hour' : 'Per mile', f(isHrs(v) ? t.perHour : t.perMile, 4)]); row(['tco', 'Per month', f(t.perMonth)]); row(['tco', 'Per year', f(t.perYear)]);
   download(`autolog-stats-${vname(v).replace(/\W+/g, '-')}-${todayISO()}.csv`, L.join('\n'), 'text/csv'); toast('Stats CSV downloaded');
 }
 /* ---------- charts (tiny SVG, no libraries) ---------- */
@@ -2126,30 +2374,35 @@ function viewDash(v) {
   const dn = dueNow(), dOver = dn.filter(i => i.level === 'over').length, inv = invTotals();
   const banner = dn.length && !sessionStorage.getItem('autolog:bannerDismissed') ? `<div class="banner ${dOver ? 'over' : 'soon'}" role="status"><a href="#/reminders" style="color:inherit;flex:1">🔔 <b>${dOver ? `${dOver} overdue` : ''}${dOver && dn.length - dOver ? ', ' : ''}${dn.length - dOver ? `${dn.length - dOver} due soon` : ''}</b> across your vehicles. View reminders →</a><button class="icon-btn" data-act="dismissBanner" aria-label="Dismiss">${I.close}</button></div>` : '';
   const parts = TCO_CATS.map(([k, l, c]) => ({ k, l, c, v: t.by[k] })), shown = parts.filter(p => p.v > 0).sort((a, b) => b.v - a.v);
-  const mpgAll = all ? (() => { let mi = 0, g = 0; vs.forEach(x => { const f = fuelStats(x); mi += f.segMiles || 0; g += sum(f.segs, 'gal'); }); return g ? mi / g : null; })() : s.avgMpg;
+  const econOf = list => { let mi = 0, g = 0; list.forEach(x => { const f = fuelStats(x); mi += f.segMiles || 0; g += sum(f.segs, 'gal'); }); return g ? mi / g : null; };
+  const roadVs = vs.filter(x => !isHrs(x)), hrVs = vs.filter(x => isHrs(x));
+  const econK = all ? (roadVs.length ? { l: hrVs.length ? 'Avg MPG (road)' : 'Avg MPG', v: fmt(econOf(roadVs), 1) } : { l: 'Avg GPH', v: fmt(econVal(hrVs[0], econOf(hrVs)), 1) })
+    : { l: `Avg ${ECON(v)}`, v: fmt(econVal(v, s.avgMpg), 1) };
+  const rate = all ? (t.hasMi ? { v: t.perMile, l: 'mile' } : { v: t.perHour, l: 'hour' }) : (isHrs(v) ? { v: t.perHour, l: 'hour' } : { v: t.perMile, l: 'mile' });
+  const mixed = all && t.hasMi && t.hasHr;
   const saved = all ? sum(vs, x => fuelStats(x).totalSaved) : s.totalSaved;
-  const sts = SECTIONS.map(sec => ({ sec, st: sectionStatus(sec, v) })), over = sts.filter(x => x.st.level === 'over').length, soon = sts.filter(x => x.st.level === 'soon').length;
+  const sts = secsFor(v).map(sec => ({ sec, st: sectionStatus(sec, v) })), over = sts.filter(x => x.st.level === 'over').length, soon = sts.filter(x => x.st.level === 'soon').length;
   return `${banner}<section class="tco-hero">
       <div class="tco-top"><div><div class="eyebrow">${all ? `All ${db.vehicles.length} vehicles` : esc(vdesc(v) || 'Vehicle')}</div><h2>${all ? 'Your fleet' : esc(vname(v))}</h2></div>
-        ${db.vehicles.length > 1 ? `<div class="seg tiny" role="radiogroup" aria-label="Scope"><label><input type="radio" name="dscope" value="one" data-act="dashScope" ${!all ? 'checked' : ''}><span>This</span></label><label><input type="radio" name="dscope" value="all" data-act="dashScope" ${all ? 'checked' : ''}><span>All</span></label></div>` : `<button class="chip-btn" data-act="odo" aria-label="Update odometer">${I.gauge} ${fmt(curOdo(v))} mi</button>`}</div>
+        ${db.vehicles.length > 1 ? `<div class="seg tiny" role="radiogroup" aria-label="Scope"><label><input type="radio" name="dscope" value="one" data-act="dashScope" ${!all ? 'checked' : ''}><span>This</span></label><label><input type="radio" name="dscope" value="all" data-act="dashScope" ${all ? 'checked' : ''}><span>All</span></label></div>` : `<button class="chip-btn" data-act="odo" aria-label="Update ${isHrs(v) ? 'engine hours' : 'odometer'}">${I.gauge} ${fmtO(curOdo(v), v)} ${UM(v)}</button>`}</div>
       <div class="tco-label">Total cost of ownership${t.first ? ` since ${fdate(t.first)}` : ''}</div>
       <div class="tco-big">${money(t.total, 0)}</div>
-      <div class="tco-rates"><div><b>${t.perMile != null ? c3(t.perMile) : '—'}</b><span>per mile</span></div><div><b>${t.perMonth != null ? money(t.perMonth, 0) : '—'}</b><span>per month</span></div><div><b>${t.perYear != null ? money(t.perYear, 0) : '—'}</b><span>per year</span></div></div>
+      <div class="tco-rates${mixed ? ' four' : ''}"><div><b>${rate.v != null ? c3(rate.v) : '—'}</b><span>per ${rate.l}</span></div>${mixed ? `<div><b>${t.perHour != null ? c3(t.perHour) : '—'}</b><span>per hour</span></div>` : ''}<div><b>${t.perMonth != null ? money(t.perMonth, 0) : '—'}</b><span>per month</span></div><div><b>${t.perYear != null ? money(t.perYear, 0) : '—'}</b><span>per year</span></div></div>
       <div class="tco-break">${donut(parts)}<ul class="tco-legend">${shown.slice(0, 6).map(p => `<li><i style="background:${p.c}"></i><span>${esc(p.l)}</span><b>${money(p.v, 0)}</b><small>${fmt(p.v / (t.total || 1) * 100, 0)}%</small></li>`).join('') || '<li class="muted">Log fill-ups and services with prices to see where the money goes.</li>'}</ul></div>
       <div class="qa"><button class="btn primary" data-act="addFuel">${I.fuel} Log fuel</button><button class="btn" data-act="pickService">${I.wrench} Log service</button><button class="btn" data-act="addPlan">${I.list} Plan part</button></div>
     </section>
     <div class="kpis">
-      <a class="kpi" href="#/fuel"><span>Avg MPG</span><b>${fmt(mpgAll, 1)}</b></a><a class="kpi" href="#/stats"><span>Cost / mile</span><b>${t.perMile != null ? c3(t.perMile) : '—'}</b></a>
+      <a class="kpi" href="#/fuel"><span>${econK.l}</span><b>${econK.v}</b></a><a class="kpi" href="#/stats"><span>Cost / ${rate.l}</span><b>${rate.v != null ? c3(rate.v) : '—'}</b></a>
       <a class="kpi" href="#/rewards"><span>Rewards saved</span><b>${money(saved, 0)}</b></a><a class="kpi" href="#/inventory"><span>Inventory</span><b>${money(inv.value, 0)}</b></a>
-      <a class="kpi ${dOver ? 'over' : dn.length ? 'soon' : ''}" href="#/reminders"><span>Items due</span><b>${fmt(dn.length)}</b></a><a class="kpi" href="#/overview"><span>Parts on car</span><b>${fmt(compsV(v).filter(c => c.current).length)}</b></a>
+      <a class="kpi ${dOver ? 'over' : dn.length ? 'soon' : ''}" href="#/reminders"><span>Items due</span><b>${fmt(dn.length)}</b></a><a class="kpi" href="#/overview"><span>${vtype(v) === 'boat' ? 'Parts on boat' : vtype(v) === 'car' ? 'Parts on car' : 'Parts installed'}</span><b>${fmt(compsV(v).filter(c => c.current).length)}</b></a>
     </div>
     <section class="card"><div class="card-head"><h3>${I.chart} Cost trend</h3><span class="muted">last 12 months</span></div>${barsTrend(t.trend)}</section>
     <section class="card proj"><div class="card-head"><h3>Next 12 months</h3><b class="proj-total">≈ ${money(pj.total, 0)}</b></div>
       <div class="proj-split"><div><span>Fuel at your pace</span><b>${money(pj.fuel, 0)}</b></div><div><span>Upcoming service &amp; planned parts</span><b>${money(pj.maint, 0)}</b></div></div>
       ${pj.items.length ? `<ul class="proj-list">${pj.items.slice(0, 5).map(i => `<li><span>${esc(i.t)}${i.n > 1 ? ` ×${i.n}` : ''}</span><b>${i.noPrice ? '<small class="muted">no price yet</small>' : i.free ? '<small class="muted">free last time</small>' : money(i.cost, 0)}</b></li>`).join('')}</ul>` : ''}
       <div class="insights-note">Estimated from your recent fuel spending, service intervals with the last price you paid, and open planned parts.</div></section>
-    <section class="card"><h3><span class="spark">${I.spark}</span> Top insights</h3>${insightsHTML(ins.slice(0, 3))}<div class="btn-row"><a href="#/deep" class="btn small">${I.layers} Deep dive</a><a href="#/stats" class="btn small">${I.chart} Parts life</a></div></section>
-    ${all ? '' : `<section class="card"><div class="card-head"><h3>Maintenance</h3><a href="#/overview" class="link" style="margin:0">What’s on the car →</a></div>
+    <section class="card"><h3><span class="spark">${I.spark}</span> Top insights</h3>${hrsText(insightsHTML(ins.slice(0, 3)), v)}<div class="btn-row"><a href="#/deep" class="btn small">${I.layers} Deep dive</a><a href="#/stats" class="btn small">${I.chart} Parts life</a></div></section>
+    ${all ? '' : `<section class="card"><div class="card-head"><h3>Maintenance</h3><a href="#/overview" class="link" style="margin:0">What’s on the ${({ car: 'car', moto: 'bike', atv: 'ATV', utv: 'UTV', boat: 'boat' })[vtype(v)]} →</a></div>
       <div class="status-summary">${over ? `<span class="pill over">${over} overdue</span>` : ''}${soon ? `<span class="pill soon">${soon} need attention</span>` : ''}${!over && !soon ? `<span class="pill ok">All good</span>` : ''}</div>
       <div class="status-list">${sts.map(({ sec, st }) => `<a class="srow" href="#/service/${sec.id}"><span class="sicon c-${sec.id}">${sec.icon}</span><span class="sbody"><b>${esc(sec.title)}</b><small>${esc(st.text)}</small></span>${pill(st)}</a>`).join('')}</div></section>`}`;
 }
@@ -2170,27 +2423,69 @@ function carDiagram(v, cur) {
     <text x="31" y="58" text-anchor="middle">FL</text><text x="189" y="58" text-anchor="middle">FR</text><text x="31" y="316" text-anchor="middle">RL</text><text x="189" y="316" text-anchor="middle">RR</text>
     <text x="110" y="68" text-anchor="middle" class="zl">ENGINE</text><text x="110" y="194" text-anchor="middle" class="zl">CABIN</text></svg>`;
 }
-const SYS_ZONE = { engine: ['engine', 'coolant', 'ignition', 'battery', 'air'], tires: ['tires'], brakes: ['brakes'], cabin: ['air'] };
+function typeDiagram(v, cur) {
+  const t = vtype(v);
+  const lv = slot => { const c = cur.find(x => x.slot === slot); return c ? health(c, v).level : 'none'; };
+  const sl = id => { const st = SEC[id] ? sectionStatus(SEC[id], v).level : 'none'; return st === 'ok' || st === 'soon' || st === 'over' ? st : 'none'; };
+  const worst = ls => ls.reduce((a, b) => RANK[b] > RANK[a] ? b : a, 'none');
+  const z = (href, lvl, shape, label) => `<a href="${href}" class="zone ${lvl}" aria-label="${esc(label)}">${shape}</a>`;
+  const eng = worst([lv('oil'), lv('plugs'), lv('battery'), lv('airFilter'), lv('coolant')]);
+  if (t === 'moto') return `<svg viewBox="0 0 260 180" class="cardiag wide" role="img" aria-label="Side view of the motorcycle">
+    <path d="M58 112 L104 70 L168 66 L200 112" class="frame"/><path d="M96 62 Q120 44 150 52 L160 64 L104 70 Z" class="body"/><path d="M150 52 L188 40 L196 50" class="frame"/>
+    ${z('#/overview/tires', lv('tire:RL'), '<circle cx="58" cy="124" r="38"/>', 'Rear tire')}${z('#/overview/tires', lv('tire:FL'), '<circle cx="204" cy="124" r="38"/>', 'Front tire')}
+    ${z('#/overview/brakes', worst([lv('pads:Rear'), lv('rotors:Rear')]), '<circle cx="58" cy="124" r="13"/>', 'Rear brake')}${z('#/overview/brakes', worst([lv('pads:Front'), lv('rotors:Front')]), '<circle cx="204" cy="124" r="13"/>', 'Front brake')}
+    ${z('#/service/chain', sl('chain'), '<rect x="58" y="128" width="66" height="9" rx="4.5"/>', 'Chain and sprockets')}
+    ${z('#/overview/engine', eng, '<rect x="104" y="80" width="56" height="42" rx="10"/>', 'Engine')}
+    <text x="132" y="105" text-anchor="middle" class="zl">ENGINE</text><text x="91" y="155" text-anchor="middle" class="zl">CHAIN</text><text x="58" y="176" text-anchor="middle">REAR</text><text x="204" y="176" text-anchor="middle">FRONT</text></svg>`;
+  if (t === 'atv' || t === 'utv') { const tire = (x, y, slot) => z('#/overview/tires', lv(slot), `<rect x="${x}" y="${y}" width="28" height="50" rx="10"/>`, SLOT[slot]);
+    return `<svg viewBox="0 0 220 300" class="cardiag" role="img" aria-label="Top-down view of the ${t === 'utv' ? 'side-by-side' : 'ATV'}">
+    <path d="${t === 'utv' ? 'M54 34 Q110 16 166 34 L172 268 Q110 284 48 268 Z' : 'M66 40 Q110 22 154 40 L160 262 Q110 280 60 262 Z'}" class="body"/>
+    ${t === 'utv' ? '<rect x="62" y="110" width="96" height="78" rx="10" class="glass"/><path d="M62 110 L158 188M158 110 L62 188" class="frame thin"/>' : '<path d="M78 84 H142" class="frame"/><circle cx="78" cy="84" r="4" class="frame"/><circle cx="142" cy="84" r="4" class="frame"/>'}
+    ${z('#/overview/engine', eng, `<rect x="82" y="${t === 'utv' ? 200 : 120}" width="56" height="${t === 'utv' ? 44 : 60}" rx="12"/>`, 'Engine')}
+    ${z('#/service/cvt', sl('cvt'), `<rect x="${t === 'utv' ? 144 : 140}" y="${t === 'utv' ? 196 : 124}" width="14" height="52" rx="7"/>`, 'CVT belt')}
+    ${z('#/service/gearOil', sl('gearOil'), '<rect x="92" y="44" width="36" height="18" rx="6"/>', 'Front differential')}${z('#/service/gearOil', sl('gearOil'), '<rect x="92" y="250" width="36" height="18" rx="6"/>', 'Rear differential')}
+    ${z('#/overview/brakes', worst([lv('pads:Front'), lv('rotors:Front')]), '<rect x="60" y="68" width="100" height="8" rx="4"/>', 'Front brakes')}${z('#/overview/brakes', worst([lv('pads:Rear'), lv('rotors:Rear')]), '<rect x="60" y="232" width="100" height="8" rx="4"/>', 'Rear brakes')}
+    ${tire(20, 40, 'tire:FL')}${tire(172, 40, 'tire:FR')}${tire(20, 218, 'tire:RL')}${tire(172, 218, 'tire:RR')}
+    <text x="110" y="${t === 'utv' ? 226 : 154}" text-anchor="middle" class="zl">ENGINE</text><text x="110" y="34" text-anchor="middle" class="zl">FRONT DIFF</text><text x="110" y="290" text-anchor="middle" class="zl">REAR DIFF</text>${t === 'utv' ? '<text x="110" y="104" text-anchor="middle" class="zl">CAB</text>' : ''}</svg>`; }
+  if (t === 'boat') return `<svg viewBox="0 0 200 340" class="cardiag" role="img" aria-label="Top-down view of the boat">
+    <path d="M100 10 Q160 70 162 160 L160 250 L40 250 L38 160 Q40 70 100 10 Z" class="body"/><rect x="74" y="120" width="52" height="34" rx="8" class="glass"/>
+    ${z('#/overview/battery', worst([lv('battery')]), '<rect x="48" y="200" width="30" height="20" rx="5"/>', 'Battery')}
+    ${z('#/service/fuelSep', sl('fuelSep'), '<rect x="122" y="196" width="26" height="28" rx="6"/>', 'Fuel / water separator')}
+    ${z('#/service/anodes', sl('anodes'), '<rect x="44" y="242" width="112" height="9" rx="4"/>', 'Anodes')}
+    ${z('#/overview/engine', worst([lv('oil'), lv('plugs')]), '<rect x="76" y="254" width="48" height="34" rx="10"/>', 'Engine')}
+    ${z('#/service/impeller', sl('impeller'), '<circle cx="100" cy="300" r="9"/>', 'Impeller / water pump')}
+    ${z('#/service/lowerUnit', sl('lowerUnit'), '<rect x="90" y="310" width="20" height="24" rx="6"/>', 'Lower unit')}
+    ${z('#/service/trailer', sl('trailer'), '<rect x="16" y="168" width="14" height="40" rx="5"/><rect x="170" y="168" width="14" height="40" rx="5"/>', 'Trailer bearings and tires')}
+    ${z('#/service/winterize', sl('winterize'), '<rect x="84" y="70" width="32" height="22" rx="6"/>', 'Winterization')}
+    <text x="100" y="275" text-anchor="middle" class="zl">ENGINE</text><text x="100" y="62" text-anchor="middle" class="zl">STORAGE</text><text x="23" y="160" text-anchor="middle">TRLR</text><text x="140" y="190" text-anchor="middle" class="zl">FUEL</text><text x="63" y="194" text-anchor="middle" class="zl">BATT</text></svg>`;
+  return carDiagram(v, cur);
+}
+const SYS_BY_TYPE = { car: null, moto: ['engine', 'coolant', 'ignition', 'battery', 'tires', 'brakes', 'air'], atv: ['engine', 'coolant', 'ignition', 'battery', 'tires', 'brakes', 'air'], utv: ['engine', 'coolant', 'ignition', 'battery', 'tires', 'brakes', 'air'], boat: ['engine', 'ignition', 'battery'] };
+const SLOTS_BY_TYPE = { moto: s => !/^tire:(FR|RR)$/.test(s) && s !== 'cabinFilter', atv: s => s !== 'cabinFilter', utv: s => s !== 'cabinFilter', boat: s => !/^(tire|pads|rotors):/.test(s) && s !== 'airFilter' && s !== 'cabinFilter' && s !== 'coolant' };
+const SYS_ZONE = { engine: ['engine', 'coolant', 'ignition', 'battery', 'air'], tires: ['tires'], brakes: ['brakes'], cabin: ['air'], battery: ['battery'] };
 function compRow(c, v) {
   const h = health(c, v);
   return `<a class="comp" href="#/comp/${encodeURIComponent(c.slot)}"><div class="comp-main"><b>${esc(c.label)}</b><small>${esc([c.brand, c.part].filter(Boolean).join(' ') || 'Brand not recorded')}${c.detail ? ' · ' + esc(c.detail) : ''}</small>
-    <small>Installed ${fdate(c.inst.date)}${c.inst.odo != null ? ` at ${fmt(c.inst.odo)} mi` : ''} · ${fmt(c.miles)} mi · ${plural(c.days || 0, 'day')} · ${c.cost ? money(c.cost) + (c.est ? '*' : '') : 'no cost'}</small>
+    <small>Installed ${fdate(c.inst.date)}${c.inst.odo != null ? ` at ${fmtO(c.inst.odo, v)} ${UM(v)}` : ''} · ${fmtO(c.miles, v)} ${UM(v)} · ${plural(c.days || 0, 'day')} · ${c.cost ? money(c.cost) + (c.est ? '*' : '') : 'no cost'}</small>
     ${h.frac != null ? `<div class="life"><i class="${h.level}" style="width:${(h.frac * 100).toFixed(0)}%"></i></div>` : ''}<small class="muted">${esc(h.basis)}${h.next ? ' · ' + esc(h.next) : ''}</small></div>${pill(h)}</a>`;
 }
 function viewOverview(v, focus) {
   const comps = compsV(v), cur = comps.filter(c => c.current), sp = v.specs || {};
-  const sys = SYS.filter(([id]) => !focus || (SYS_ZONE[focus] || []).includes(id));
-  const missing = SYS.flatMap(([, , , slots]) => slots).filter(s => !s.startsWith('tire:Spare') && !s.startsWith('rotors') && s !== 'wires' && s !== 'coils' && !cur.some(c => c.slot === s));
-  return `<div class="page-title"><h2>Vehicle overview</h2><a class="btn small" href="#/specs">${I.car} Specs</a></div>
-    <section class="card ov-head"><div class="vcard"><span class="sicon c-fuel">${I.car}</span><div class="vinfo"><b>${esc(vname(v))}</b><small>${esc(vdesc(v))}${v.engine ? ' · ' + esc(v.engine) : ''}</small></div></div>
-      <div class="spec" style="margin-top:10px"><div><span>VIN</span>${v.vin ? `<code>${esc(v.vin)}</code>` : '<span class="muted">Not set</span>'}</div><div><span>Odometer</span>${fmt(curOdo(v))} mi</div>
-        <div><span>Oil</span>${[sp.oilCapacity && sp.oilCapacity + ' qt', sp.oilViscosity].filter(Boolean).join(' · ') || '<span class="muted">—</span>'}</div><div><span>Tires</span>${esc(sp.tireSize || '—')}${sp.psiFront ? ` · ${sp.psiFront}/${sp.psiRear || sp.psiFront} PSI` : ''}</div>
+  const t = vtype(v), allow = SYS_BY_TYPE[t], slotOk = SLOTS_BY_TYPE[t] || (() => true);
+  const sys = SYS.filter(([id]) => (!allow || allow.includes(id)) && !(id === 'coolant' && t === 'moto' && v.cooling === 'Air-cooled')).map(([id, title, icon, slots]) => [id, t === 'moto' && id === 'air' ? 'Air filter' : title, icon, slots.filter(slotOk)]).filter(([id]) => !focus || (SYS_ZONE[focus] || []).includes(id));
+  const missing = sys.flatMap(([, , , slots]) => slots).filter(s => !s.startsWith('tire:Spare') && !s.startsWith('rotors') && s !== 'wires' && s !== 'coils' && !cur.some(c => c.slot === s));
+  const extra = t === 'car' || focus ? [] : secsFor(v).filter(sec => !['oil', 'coolant', 'brakes', 'tires', 'plugs', 'battery', 'airFilter', 'cabinFilter'].includes(sec.id));
+  return `<div class="page-title"><h2>${t === 'car' ? 'Vehicle' : esc(VT(v).l.split(' /')[0])} overview</h2><a class="btn small" href="#/specs">${VT(v).icon} Specs</a></div>
+    <section class="card ov-head"><div class="vcard"><span class="sicon c-vt-${t}">${VT(v).icon}</span><div class="vinfo"><b>${esc(vname(v))}</b><small>${esc(vdesc(v))}${v.engine ? ' · ' + esc(v.engine) : ''}</small></div></div>
+      <div class="spec" style="margin-top:10px"><div><span>${t === 'boat' ? 'HIN' : 'VIN'}</span>${(t === 'boat' ? v.hin : v.vin) ? `<code>${esc(t === 'boat' ? v.hin : v.vin)}</code>` : '<span class="muted">Not set</span>'}</div><div><span>${ODOL(v)}</span>${fmtO(curOdo(v), v)} ${UM(v)}</div>
+        <div><span>Oil</span>${[sp.oilCapacity && sp.oilCapacity + ' qt', sp.oilViscosity].filter(Boolean).join(' · ') || '<span class="muted">—</span>'}</div>${t === 'boat' ? `<div><span>Lower unit</span>${esc([sp.lowerUnitCap && sp.lowerUnitCap + ' oz', sp.lowerUnitLube].filter(Boolean).join(' · ') || '—')}</div>` : `<div><span>Tires</span>${esc(sp.tireSize || '—')}${sp.psiFront ? ` · ${sp.psiFront}/${sp.psiRear || sp.psiFront} PSI` : ''}</div>`}
         <div><span>Battery</span>${esc([sp.batteryGroup && 'Group ' + sp.batteryGroup, sp.batteryCca && sp.batteryCca + ' CCA'].filter(Boolean).join(' · ') || '—')}</div><div><span>Plugs</span>${esc([specOf(v, 'plugCount') && specOf(v, 'plugCount') + '×', sp.plugPart, sp.plugGap && sp.plugGap + '"'].filter(Boolean).join(' ') || '—')}</div></div></section>
-    <section class="card diag-card">${carDiagram(v, cur)}<div class="diag-side"><p class="muted" style="margin:0 0 8px;font-size:.84rem">Tap a zone to filter. Colors show health from intervals and your measurements.</p>
+    <section class="card diag-card">${typeDiagram(v, cur)}<div class="diag-side"><p class="muted" style="margin:0 0 8px;font-size:.84rem">Tap a zone to filter. Colors show health from intervals and your measurements.</p>
       <div class="legend col"><span><i style="background:var(--ok)"></i>OK</span><span><i style="background:var(--soon)"></i>Soon</span><span><i style="background:var(--over)"></i>Replace</span><span><i style="background:var(--line)"></i>Not logged</span></div>${focus ? `<a href="#/overview" class="btn small" style="margin-top:10px">Show all</a>` : ''}</div></section>
     ${sys.map(([id, title, icon, slots]) => { const cs = slots.map(s => cur.find(c => c.slot === s)).filter(Boolean);
       return `<section class="card"><div class="card-head"><h3>${icon} ${esc(title)}</h3><span class="muted">${cs.length ? plural(cs.length, 'part') : ''}</span></div>${cs.length ? `<div class="comps">${cs.map(c => compRow(c, v)).join('')}</div>` : `<p class="muted" style="margin:0">Nothing logged yet. <a href="#/service/${famSec[slotFamily(slots[0])]}">Log it</a> to track its life.</p>`}</section>`; }).join('')}
-    ${missing.length && !focus ? `<p class="muted" style="font-size:.8rem;text-align:center">Not yet tracked: ${esc(missing.map(s => SLOT[s]).join(', '))}.</p>` : ''}
+    ${extra.length ? `<section class="card"><div class="card-head"><h3>${VT(v).icon} ${esc(VT(v).l.split(' /')[0])} systems</h3></div><div class="status-list">${extra.map(sec => { const st = sectionStatus(sec, v); return `<a class="srow" href="#/service/${sec.id}"><span class="sicon c-${sec.id}">${sec.icon}</span><span class="sbody"><b>${esc(sec.title)}</b><small>${esc(st.text)}</small></span>${pill(st)}</a>`; }).join('')}</div></section>` : ''}
+    ${missing.length && !focus ? `<p class="muted" style="font-size:.8rem;text-align:center">Not yet tracked: ${esc(missing.map(s => slotLabel(s, v)).join(', '))}.</p>` : ''}
     <p class="muted" style="font-size:.78rem;text-align:center">* cost split evenly across parts done in the same entry.</p>`;
 }
 function viewComp(v, slot) {
@@ -2246,7 +2541,7 @@ function viewDeep(v) {
 let installPrompt = null;
 function render() {
   const [page = 'dash', sub] = (location.hash.replace(/^#\/?/, '') || 'dash').split('/');
-  const v = cur(), app = $('#app');
+  const v = cur(), app = $('#app'); UV = v;
   $('#vname').textContent = vname(v);
   $$('#tabbar a').forEach(a => a.classList.toggle('on', a.dataset.tab === page || (page === 'comp' && a.dataset.tab === 'overview') || (['inventory', 'plan', 'stats'].includes(page) && a.dataset.tab === 'service') || (page === 'about' && a.dataset.tab === 'garage')));
   const fab = $('#fab'); fab.hidden = true; fab.onclick = null;
@@ -2259,9 +2554,9 @@ function render() {
   else if (page === 'plan') { html = viewPlan(sub === 'all' || !v); fab.hidden = false; fab.setAttribute('aria-label', 'Plan a part'); fab.onclick = () => pickCategory('Plan a part', c => planForm(null, c)); }
   else if (!v) html = emptyGarage();
   else if (page === 'overview') html = viewOverview(v, sub);
-  else if (page === 'comp' && sub) html = viewComp(v, decodeURIComponent(sub));
-  else if (page === 'stats') html = viewStats(v);
-  else if (page === 'deep') html = viewDeep(v);
+  else if (page === 'comp' && sub) html = hrsText(viewComp(v, decodeURIComponent(sub)), v);
+  else if (page === 'stats') html = hrsText(viewStats(v), v);
+  else if (page === 'deep') html = hrsText(viewDeep(v), v);
   else if (page === 'specs') html = viewSpecs(v);
   else if (page === 'fuel') { html = viewFuel(v); fab.hidden = false; fab.setAttribute('aria-label', 'Log fill-up'); fab.onclick = () => fuelForm(v); }
   else if (page === 'service' && sub && SEC[sub]) { html = viewSection(v, SEC[sub]); fab.hidden = false; fab.setAttribute('aria-label', `Log ${SEC[sub].noun}`); fab.onclick = () => maintForm(v, SEC[sub]); }
@@ -2301,6 +2596,7 @@ document.addEventListener('click', e => {
     addPlan: () => pickCategory('Plan a part', c => planForm(null, c)), planEdit: () => planForm(db.plans.find(x => x.id === el.dataset.id)),
     planBuy: () => planBought(db.plans.find(x => x.id === el.dataset.id)), planInstall: () => planInstall(db.plans.find(x => x.id === el.dataset.id)),
     planScope: () => { location.hash = el.value === 'all' ? '#/plan/all' : '#/plan'; },
+    garageFilter: () => { garageFilter = el.value; render(); },
     dashScope: () => { db.settings.dashAll = el.value === 'all'; save(); render(); },
     statsCsv: () => exportStatsCSV(v),
     specUseProfile: () => { const ps = vehProfile(v)?.specs || {}; let n = 0; Object.entries(ps).forEach(([k, x]) => { if (!['src', 'note'].includes(k) && (v.specs[k] == null || v.specs[k] === '')) { v.specs[k] = x; n++; } }); save(); render(); toast(n ? `Filled ${n} specs from the owner’s manual` : 'Nothing new to fill'); },
@@ -2309,9 +2605,9 @@ document.addEventListener('click', e => {
     theme: () => { db.settings.theme = el.value; save(); applyTheme(); },
     install: async () => { if (!installPrompt) return; installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; render(); },
     eraseAll: async () => { const ok = await ask({ title: 'Erase all data?', msg: 'This deletes every vehicle and record on this device. It can’t be undone.', typeToConfirm: 'ERASE', buttons: [{ label: 'Erase everything', value: true, cls: 'danger', needsType: 1 }, { label: 'Cancel', value: false }] }); if (ok) { db = blank(); save(); applyTheme(); render(); toast('All data erased'); } },
-    odo: () => openForm({ title: 'Update odometer', fields: [{ k: 'odometer', l: 'Current odometer', t: 'num', unit: 'mi', step: 1, req: 1 }], values: { odometer: curOdo(v) },
-      onSave: vals => { if (vals.odometer < curOdo(v)) { toast(`It can’t be lower than your latest entry (${fmt(curOdo(v))} mi)`); return false; } v.odometer = vals.odometer; } }),
-    pickVehicle: () => pickSheet('Vehicles', [...db.vehicles.map(x => ({ title: vname(x), sub: `${vdesc(x)} · ${fmt(curOdo(x))} mi`, icon: I.car, cls: 'c-fuel', right: x === v ? '<span class="current-badge">Current</span>' : '', run: () => { db.settings.current = x.id; save(); render(); } })),
+    odo: () => openForm({ title: isHrs(v) ? 'Update engine hours' : 'Update odometer', fields: fieldsFor(v, [{ k: 'odometer', l: 'Current odometer', t: 'num', unit: 'mi', step: 1, req: 1 }]), values: { odometer: curOdo(v) },
+      onSave: vals => { if (vals.odometer < curOdo(v)) { toast(`It can’t be lower than your latest entry (${fmtO(curOdo(v), v)} ${UM(v)})`); return false; } v.odometer = vals.odometer; } }),
+    pickVehicle: () => pickSheet('Vehicles', [...db.vehicles.map(x => ({ title: vname(x), sub: `${VT(x).l} · ${vdesc(x)} · ${fmtO(curOdo(x), x)} ${UM(x)}`, icon: VT(x).icon, cls: 'c-vt-' + vtype(x), right: x === v ? '<span class="current-badge">Current</span>' : '', run: () => { db.settings.current = x.id; save(); render(); } })),
       { title: 'Add vehicle', icon: I.plus, cls: 'c-fuel', run: () => addVehicle() }, { title: 'Manage vehicles', icon: I.wrench, cls: 'c-tires', run: () => { location.hash = '#/garage'; } }]),
   }[act];
   if (run) { if (el.tagName === 'A') e.preventDefault(); run(); }

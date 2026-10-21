@@ -1,5 +1,5 @@
 /* AutoLog service worker: offline app shell, update prompt, reminder notifications */
-const CACHE = 'autolog-v8';
+const CACHE = 'autolog-v9';
 const DATA = 'autolog-data'; // reminder snapshot written by the page (never deleted on upgrade)
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './rewards-data.js', './parts-catalog.json', './sync.js', './vendor/supabase.js', './manifest.json',
