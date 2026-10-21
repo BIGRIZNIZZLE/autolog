@@ -26,3 +26,11 @@ index.html · styles.css · app.js (app) · rewards-data.js (rewards reference l
   - Each item can be added to your calendar as an `.ics` file with alerts.
 - **Updates.** When a new version is ready, a bar appears: "Update available, tap to reload".
 - **Data.** Existing data is migrated in place to schema v2. An untouched copy of the old data is kept in `localStorage['autolog:backup:v1']`.
+
+## Version 3: optional cross-device sync (Oct 2026)
+- In the **Garage** tab, open **Account & sync**. Enter your email, then type the 6-digit code or paste the sign-in link from the email. Paste the link on iPhone Home Screen apps: don't tap it, press and hold it, tap Copy Link, and paste it into AutoLog.
+- Data syncs per record (vehicles, fill-ups, service entries, rewards programs). The newest edit wins, and deletes sync too. Sync runs when the app opens, a couple of seconds after each change, when you come back online, and from **Sync now**. Offline changes queue on the device.
+- Sync never erases local data. The first sign-in on a device merges local data with your account, and a raw copy goes to `localStorage['autolog:backup:presync']`. Signing out keeps everything on the device.
+- Backend: Supabase project `mzaviklrqweptobljfoo`, table `public.records` with row-level security, so each signed-in user can only read and write their own rows. There are no hard deletes. Only the public publishable key is in the client.
+- `vendor/supabase.js` is a local copy of supabase-js. It's loaded only when you use sync.
+- Sync isn't included in `autolog-standalone.html`.

@@ -314,6 +314,16 @@ a.entry{text-decoration:none}
 .where a .ic{width:16px;height:16px}
 .entry.rem{cursor:default;align-items:flex-start}
 .fab[hidden]{display:none}
+/* sync */
+.card.sync .sync-lead{margin:0 0 12px}
+.sync-form{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.sync-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sync-row > div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sync-row b{overflow-wrap:anywhere}
+.sync-err{padding:10px 12px;border-radius:12px;background:var(--over-soft);color:var(--over);font-weight:600;font-size:.9rem}
+.sync-tip{padding:12px;border-radius:12px;background:var(--surface-2);font-size:.88rem;margin-bottom:12px;color:var(--muted)}
+.sync-tip b{color:var(--text)}
+.sync-note{font-size:.84rem;margin:12px 0 0}
 
 </style>
 </head>
@@ -660,7 +670,7 @@ function load() {
   return blank();
 }
 let db = load();
-function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { toast('Couldn’t save. Your browser storage may be full.'); } try { afterSave(); } catch (e) { console.warn(e); } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { toast('Couldn’t save. Your browser storage may be full.'); } try { afterSave(); } catch (e) { console.warn(e); } try { window.AutoLogSync && window.AutoLogSync.changed(); } catch (e) { console.warn(e); } }
 const cur = () => { const v = db.vehicles.find(x => x.id === db.settings.current) || null; if (v && (!v.specs || typeof v.specs !== 'object')) v.specs = {}; return v; };
 const vname = v => v ? (v.name || [v.year, v.make, v.model].filter(Boolean).join(' ') || 'Vehicle') : 'No vehicle';
 const vdesc = v => [v.year, v.make, v.model, v.trim].filter(Boolean).join(' ');
@@ -1323,9 +1333,10 @@ function viewGarage() {
   return `<div class="page-title"><h2>Garage</h2><button class="btn small primary" data-act="addVehicle">${I.plus} Vehicle</button></div>
     ${db.vehicles.length ? db.vehicles.map(x => `<section class="card"><div class="vcard"><span class="sicon c-fuel">${I.car}</span><div class="vinfo"><b>${esc(vname(x))}</b><small>${esc(vdesc(x))} · ${fmt(curOdo(x))} mi · ${plural(x.fuel.length, 'fill-up')}</small></div>${x === v ? '<span class="current-badge">Current</span>' : ''}</div>
       <div class="vactions">${x !== v ? `<button class="btn small primary" data-act="select" data-id="${x.id}">Select</button>` : ''}<button class="btn small" data-act="editVehicle" data-id="${x.id}">${I.edit} Edit</button><button class="btn small" data-act="specsFor" data-id="${x.id}">${I.car} Specs</button><button class="btn small" data-act="resetFuelV" data-id="${x.id}" ${x.fuel.length ? '' : 'disabled'}>${I.reset} Reset fuel</button><button class="btn small ghost-danger" data-act="eraseVehicle" data-id="${x.id}">${I.trash} Erase</button></div></section>`).join('') : emptyGarage()}
+    <div id="syncCard">${window.AutoLogSync ? window.AutoLogSync.cardHTML() : ''}</div>
     <section class="card"><h3>Settings &amp; backup</h3>
       <div class="setting"><b>Appearance</b><div class="seg" role="radiogroup">${['auto', 'light', 'dark'].map(t => `<label><input type="radio" name="theme" value="${t}" ${db.settings.theme === t ? 'checked' : ''} data-act="theme"><span>${t[0].toUpperCase() + t.slice(1)}</span></label>`).join('')}</div></div>
-      <div class="setting"><b>Backup</b><small>Your data lives only in this browser. Export a backup now and then, and import it to move to another device.</small>
+      <div class="setting"><b>Backup</b><small>Your data lives in this browser (and in your account if you turn on sync above). Export a backup now and then; you can import it on any device.</small>
         <div class="btn-row"><button class="btn small" data-act="export">${I.download} Export JSON</button><button class="btn small" data-act="import">${I.upload} Import JSON</button></div></div>
       <div class="setting"><b>Sample data</b><small>Adds a demo vehicle with fill-ups and maintenance so you can look around. You can erase it anytime.</small><div><button class="btn small" data-act="loadSample">Load sample data</button></div></div>
       ${installPrompt ? `<div class="setting"><b>Install</b><small>Add AutoLog to your home screen for one-tap access.</small><div><button class="btn small primary" data-act="install">Install app</button></div></div>`
@@ -1779,6 +1790,13 @@ setupSW();
 window.addEventListener('storage', e => { if (e.key === KEY) { db = load(); render(); } });
 
 applyTheme(); render(); syncSnapshot(); setTimeout(() => checkNotify(), 1500);
+// Bridge for the optional sync module (sync.js). Sync replaces data only through here.
+window.AutoLogApp = {
+  getDb: () => db,
+  normalize: j => normalize(j),
+  replaceDb(n) { db = normalize(n); try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { toast('Couldn’t save. Your browser storage may be full.'); } try { afterSave(); } catch (e) { console.warn(e); } render(); },
+  toast: m => toast(m),
+};
 window.AutoLog = { stats: () => cur() && fuelStats(cur()), insights: () => cur() && insights(cur(), fuelStats(cur())), reminders: () => allReminders(), ics: () => icsFor(allReminders()), vinCheck, current: () => cur() };
 })();
 

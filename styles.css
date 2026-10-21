@@ -298,3 +298,13 @@ a.entry{text-decoration:none}
 .where a .ic{width:16px;height:16px}
 .entry.rem{cursor:default;align-items:flex-start}
 .fab[hidden]{display:none}
+/* sync */
+.card.sync .sync-lead{margin:0 0 12px}
+.sync-form{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.sync-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sync-row > div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sync-row b{overflow-wrap:anywhere}
+.sync-err{padding:10px 12px;border-radius:12px;background:var(--over-soft);color:var(--over);font-weight:600;font-size:.9rem}
+.sync-tip{padding:12px;border-radius:12px;background:var(--surface-2);font-size:.88rem;margin-bottom:12px;color:var(--muted)}
+.sync-tip b{color:var(--text)}
+.sync-note{font-size:.84rem;margin:12px 0 0}
