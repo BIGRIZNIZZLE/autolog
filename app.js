@@ -781,7 +781,7 @@ const insightsHTML = list => `<ul class="insights">${list.map(i => `<li class="$
 
 /* ---------- views ---------- */
 function emptyGarage() {
-  return `<div class="card empty"><div class="hero-empty">${I.car}</div><div class="big">Welcome to AutoLog</div>
+  return `<div class="card empty"><div class="hero-empty" role="img" aria-label="AutoLog"></div><div class="big">Welcome to AutoLog</div>
     <div>Track fill-ups, MPG, and all your maintenance. Everything stays on this device and works offline.</div>
     <div class="btn-row"><button class="btn primary" data-act="addVehicle">${I.plus} Add your vehicle</button><button class="btn" data-act="loadSample">Load sample data</button></div></div>`;
 }
