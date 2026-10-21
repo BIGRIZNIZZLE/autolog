@@ -27,6 +27,11 @@
 
   /* ---------- db <-> records ---------- */
   // key = kind/id ; record = { kind, id, data }
+  // Account-wide lists (user base-list parts, planned parts, inventory), one row per item.
+  // Stored as kind 'maint' under a reserved vehicle id so older app versions keep them as orphans
+  // (never deleting them) and the existing kind check constraint needs no change.
+  const ACCT = '__acct';
+  const TOP = [['part', 'parts'], ['plan', 'plans'], ['inv', 'inventory']];
   function explode(db) {
     const m = new Map();
     for (const v of db.vehicles || []) {
@@ -36,6 +41,7 @@
       for (const [sec, list] of Object.entries(maint || {})) for (const e of list || []) if (e && e.id) m.set('maint/' + e.id, { kind: 'maint', id: e.id, data: { ...clone(e), _vid: v.id, _sec: sec } });
     }
     for (const p of db.programs || []) if (p && p.id) m.set('program/' + p.id, { kind: 'program', id: p.id, data: clone(p) });
+    for (const [p, key] of TOP) for (const x of db[key] || []) if (x && x.id) m.set('maint/' + p + ':' + x.id, { kind: 'maint', id: p + ':' + x.id, data: { ...clone(x), _vid: ACCT, _sec: key } });
     // records waiting for their vehicle (e.g. arrived before it) still count as live
     for (const [k, r] of Object.entries(readJSON(ORPH, {}))) if (!m.has(k)) m.set(k, r);
     return m;
@@ -52,6 +58,7 @@
     (base.vehicles || []).forEach(v => { (v.fuel || []).forEach((e, i) => fuelOrder.set(e.id, i)); Object.values(v.maint || {}).forEach(l => (l || []).forEach((e, i) => maintOrder.set(e.id, i))); });
     for (const [k, r] of recs) {
       if (r.kind !== 'fuel' && r.kind !== 'maint') continue;
+      if (r.data && r.data._vid === ACCT) continue;
       const v = byId.get(r.data._vid);
       if (!v) { orphans[k] = r; continue; }
       const { _vid, _sec, ...e } = clone(r.data); e.id = r.id;
@@ -60,6 +67,12 @@
     out.vehicles.forEach(v => { v.fuel.sort((a, b) => (fuelOrder.get(a.id) ?? 1e9) - (fuelOrder.get(b.id) ?? 1e9)); Object.values(v.maint).forEach(l => l.sort((a, b) => (maintOrder.get(a.id) ?? 1e9) - (maintOrder.get(b.id) ?? 1e9))); });
     const porder = new Map((base.programs || []).map((p, i) => [p.id, i]));
     out.programs = [...recs.values()].filter(r => r.kind === 'program').map(r => ({ ...clone(r.data), id: r.id })).sort((a, b) => (porder.get(a.id) ?? 1e9) - (porder.get(b.id) ?? 1e9));
+    for (const [p, key] of TOP) {
+      const ord = new Map((base[key] || []).map((x, i) => [x.id, i]));
+      out[key] = [...recs.values()].filter(r => r.kind === 'maint' && r.data && r.data._vid === ACCT && r.data._sec === key)
+        .map(r => { const { _vid, _sec, ...x } = clone(r.data); x.id = r.id.slice(p.length + 1); return x; })
+        .sort((a, b) => (ord.get(a.id) ?? 1e9) - (ord.get(b.id) ?? 1e9));
+    }
     writeJSON(ORPH, orphans);
     return out;
   }

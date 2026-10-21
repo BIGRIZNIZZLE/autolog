@@ -1,0 +1,1180 @@
+{
+ "version": 1,
+ "generatedAt": "2026-10-21T14:24:03.477Z",
+ "note": "Curated part numbers with sources. No retailer prices: Amazon/Walmart and other retailers block automated lookups (see sources). The app uses your own paid/noted prices.",
+ "sources": {
+  "amazon": {
+   "status": "blocked",
+   "note": "Search pages state automated AI-agent access violates Amazon Conditions of Use; a Product Advertising API key would be the sanctioned route."
+  },
+  "walmart": {
+   "status": "blocked",
+   "note": "Bot check (Robot or human)."
+  },
+  "autozone": {
+   "status": "disallowed",
+   "note": "robots.txt disallows search URLs."
+  },
+  "advanceauto": {
+   "status": "blocked",
+   "note": "Bot-protection page."
+  },
+  "oreilly": {
+   "status": "blocked",
+   "note": "Bot-protection page."
+  },
+  "rockauto": {
+   "status": "disallowed",
+   "note": "robots.txt disallows AI agents."
+  },
+  "discounttire": {
+   "status": "disallowed",
+   "note": "robots.txt disallows search."
+  }
+ },
+ "vehicles": {
+  "sierra15": {
+   "label": "2015 GMC Sierra 1500 5.3L V8 (L83)",
+   "years": [
+    2014,
+    2015
+   ],
+   "makes": [
+    "gmc",
+    "chevrolet",
+    "chevy"
+   ],
+   "models": [
+    "sierra",
+    "silverado"
+   ],
+   "disp": 5.3,
+   "specs": {
+    "oilCapacity": 8.5,
+    "oilViscosity": "0W-20",
+    "oilType": "Synthetic",
+    "oilFilter": "PF63",
+    "plugPart": "41-114",
+    "plugType": "Iridium",
+    "plugGap": 0.04,
+    "plugCount": 8,
+    "batteryGroup": "94R",
+    "batteryCca": 720,
+    "airFilterPart": "A3181C",
+    "cabinFilterPart": "CF188",
+    "src": "https://www.gmc.com/ownercenter/content/dam/gmownercenter/gmna/dynamic/manuals/2015/gmc/sierra_1500/2015_gmc_sierra_owners.pdf",
+    "note": "Owner's manual: 8.0 L / 8.5 qt with filter, dexos1 SAE 0W-20, plug gap 0.037–0.043 in. Battery per GM bulletin (94R, 720 CCA); some trucks have group 48/H6 — check your label. Tire size varies by trim; check the door placard."
+   }
+  },
+  "envision17": {
+   "label": "2017 Buick Envision 2.0L turbo (LTG)",
+   "years": [
+    2016,
+    2017
+   ],
+   "makes": [
+    "buick"
+   ],
+   "models": [
+    "envision"
+   ],
+   "disp": 2,
+   "specs": {
+    "oilCapacity": 6,
+    "oilViscosity": "5W-30",
+    "oilType": "Synthetic",
+    "oilFilter": "PF64",
+    "plugPart": "41-125",
+    "plugType": "Iridium",
+    "plugGap": 0.032,
+    "plugCount": 4,
+    "batteryGroup": "94R",
+    "batteryCca": 850,
+    "airFilterPart": "A3201C",
+    "cabinFilterPart": "CF185",
+    "src": "https://contentdelivery.ext.gm.com/content/dam/cope/en_us/public/pdf_assets/active/owners_manuals_browse/2017/17_BUI_Envision_OM_en_US_23219853B_2016NOV10_2P.pdf",
+    "note": "Owner's manual (2.0L turbo): 5.7 L / 6.0 qt with filter, dexos1 SAE 5W-30 (0W-30 below −20 °F), plug gap 0.030–0.035 in. Battery: 94R AGM 850 CCA (stop/start) per GM bulletin."
+   }
+  },
+  "sonic12": {
+   "label": "2012 Chevrolet Sonic 1.4L turbo (LUV)",
+   "years": [
+    2012,
+    2016
+   ],
+   "makes": [
+    "chevrolet",
+    "chevy"
+   ],
+   "models": [
+    "sonic"
+   ],
+   "disp": 1.4,
+   "specs": {
+    "oilCapacity": 4.2,
+    "oilViscosity": "5W-30",
+    "oilType": "Synthetic",
+    "oilFilter": "PF2257G",
+    "plugPart": "41-120",
+    "plugType": "Iridium",
+    "plugGap": 0.028,
+    "plugCount": 4,
+    "batteryGroup": "47",
+    "batteryCca": 525,
+    "airFilterPart": "96950990",
+    "cabinFilterPart": "CF181",
+    "src": "https://assets.gm.com/manuals/chevrolet/2012_chevrolet_sonic_owners.pdf",
+    "note": "Owner's manual (1.4L turbo): 4.0 L / 4.2 qt with filter, dexos1 SAE 5W-30 (0W-30 below −20 °F), plug gap 0.028 in. Battery 47/H5, 525 CCA per GM bulletin. Oil filter cartridge depends on housing (Hengst vs UFI)."
+   }
+  }
+ },
+ "items": [
+  {
+   "cat": "oilFilter",
+   "brand": "ACDelco",
+   "part": "PF63",
+   "name": "ACDelco Gold PF63 oil filter (GM 89017525)",
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://www.gmc.com/ownercenter/content/dam/gmownercenter/gmna/dynamic/manuals/2015/gmc/sierra_1500/2015_gmc_sierra_owners.pdf"
+   ],
+   "id": "oilfilter-acdelco-pf63",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "WIX",
+   "part": "57045",
+   "name": "WIX 57045 spin-on oil filter (PF63 equivalent)",
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://filterverified.com/charts/purolator-oil-filter-cross-reference/",
+    "https://www.finditparts.com/products/4647197/acdelco-pf63"
+   ],
+   "id": "oilfilter-wix-57045",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "FRAM",
+   "part": "XG10575",
+   "name": "FRAM Ultra Synthetic XG10575 (PF63 equivalent)",
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://www.finditparts.com/products/4647197/acdelco-pf63"
+   ],
+   "id": "oilfilter-fram-xg10575",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "Mobil 1",
+   "part": "M1-212A",
+   "name": "Mobil 1 Extended Performance M1-212A (PF63 equivalent)",
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://filterverified.com/charts/purolator-oil-filter-cross-reference/",
+    "https://www.finditparts.com/products/4647197/acdelco-pf63"
+   ],
+   "id": "oilfilter-mobil-1-m1-212a",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "Purolator",
+   "part": "PL22500",
+   "name": "Purolator PureONE PL22500 (PF63 equivalent)",
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://filterverified.com/charts/purolator-oil-filter-cross-reference/"
+   ],
+   "id": "oilfilter-purolator-pl22500",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "ACDelco",
+   "part": "PF64",
+   "name": "ACDelco Gold PF64 oil filter (GM 12640445)",
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://contentdelivery.ext.gm.com/content/dam/cope/en_us/public/pdf_assets/active/owners_manuals_browse/2017/17_BUI_Envision_OM_en_US_23219853B_2016NOV10_2P.pdf"
+   ],
+   "id": "oilfilter-acdelco-pf64",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "WIX",
+   "part": "57060",
+   "name": "WIX 57060 spin-on oil filter (PF64 equivalent)",
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://www.finditparts.com/products/3862554/acdelco-pf64"
+   ],
+   "id": "oilfilter-wix-57060",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "FRAM",
+   "part": "XG12060",
+   "name": "FRAM Ultra Synthetic XG12060 (PF64 equivalent)",
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://www.finditparts.com/products/3862554/acdelco-pf64"
+   ],
+   "id": "oilfilter-fram-xg12060",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "Mobil 1",
+   "part": "M1-113A",
+   "name": "Mobil 1 Extended Performance M1-113A (PF64 equivalent)",
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://www.finditparts.com/products/3862554/acdelco-pf64"
+   ],
+   "id": "oilfilter-mobil-1-m1-113a",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "Purolator",
+   "part": "PL11403",
+   "name": "Purolator PureONE PL11403 (PF64 equivalent)",
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://www.finditparts.com/products/3862554/acdelco-pf64"
+   ],
+   "id": "oilfilter-purolator-pl11403",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "ACDelco",
+   "part": "PF2257G",
+   "name": "ACDelco PF2257G cartridge oil filter (GM 93185674)",
+   "fits": [
+    "sonic12"
+   ],
+   "src": [
+    "https://assets.gm.com/manuals/chevrolet/2012_chevrolet_sonic_owners.pdf"
+   ],
+   "note": "Hengst-style housing. UFI-style housings use a different cartridge; check your filter cap.",
+   "id": "oilfilter-acdelco-pf2257g",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oilFilter",
+   "brand": "FRAM",
+   "part": "CH10246",
+   "name": "FRAM CH10246 cartridge (PF2257G equivalent)",
+   "fits": [
+    "sonic12"
+   ],
+   "src": [
+    "https://www.fram.com/media/wysiwyg/resources/consumer_tech_docs/gm-14l-18l-cartridge-oil-filter-tsb-rev-1.pdf"
+   ],
+   "note": "Hengst-style housing only.",
+   "id": "oilfilter-fram-ch10246",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "plugs",
+   "brand": "ACDelco",
+   "part": "41-114",
+   "name": "ACDelco Professional 41-114 iridium (GM 12622441)",
+   "type": "Iridium",
+   "gap": 0.04,
+   "count": 8,
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://www.gmc.com/ownercenter/content/dam/gmownercenter/gmna/dynamic/manuals/2015/gmc/sierra_1500/2015_gmc_sierra_owners.pdf"
+   ],
+   "note": "Manual gap 0.037–0.043 in.",
+   "id": "plugs-acdelco-41-114",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "plugs",
+   "brand": "ACDelco",
+   "part": "41-125",
+   "name": "ACDelco Professional 41-125 iridium (GM 12647827)",
+   "type": "Iridium",
+   "gap": 0.032,
+   "count": 4,
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://contentdelivery.ext.gm.com/content/dam/cope/en_us/public/pdf_assets/active/owners_manuals_browse/2017/17_BUI_Envision_OM_en_US_23219853B_2016NOV10_2P.pdf"
+   ],
+   "note": "Manual gap 0.030–0.035 in (2.0T).",
+   "id": "plugs-acdelco-41-125",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "plugs",
+   "brand": "ACDelco",
+   "part": "41-120",
+   "name": "ACDelco Professional 41-120 iridium (GM 55580961)",
+   "type": "Iridium",
+   "gap": 0.028,
+   "count": 4,
+   "fits": [
+    "sonic12"
+   ],
+   "src": [
+    "https://assets.gm.com/manuals/chevrolet/2012_chevrolet_sonic_owners.pdf"
+   ],
+   "note": "Manual gap 0.028 in.",
+   "id": "plugs-acdelco-41-120",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "plugs",
+   "brand": "NGK",
+   "part": "BKR6EIX",
+   "name": "NGK Iridium IX BKR6EIX (41-120 cross-reference)",
+   "type": "Iridium",
+   "gap": 0.028,
+   "count": 4,
+   "fits": [
+    "sonic12"
+   ],
+   "src": [
+    "https://www.thesparktwin.com/en/acdelco/41-120/"
+   ],
+   "note": "Cross-reference; gap to 0.028 in before installing.",
+   "id": "plugs-ngk-bkr6eix",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "coils",
+   "brand": "ACDelco",
+   "part": "25202791",
+   "name": "ACDelco GM Original Equipment ignition coil 25202791",
+   "kind": "Coils",
+   "count": 1,
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://newparts.com/acdelco-25202791-ignition-coil"
+   ],
+   "note": "Single coil module for the 2.0T LTG.",
+   "id": "coils-acdelco-25202791",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "battery",
+   "brand": "ACDelco",
+   "part": "94RPG",
+   "name": "ACDelco Professional Gold 94RPG (GM 88864065), group 94R",
+   "group": "94R",
+   "cca": 720,
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10135250-9999.pdf"
+   ],
+   "note": "GM bulletin lists 94R / 720 CCA as the warranty replacement for gas V8 Silverado/Sierra; check your battery label.",
+   "id": "battery-acdelco-94rpg",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "battery",
+   "brand": "Interstate",
+   "part": "MTZ-48/H6",
+   "name": "Interstate MTZ-48/H6 AGM, group 48/H6, 730 CCA",
+   "group": "48",
+   "cca": 730,
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://www.interstatebatteries.com/products/mtz-48/h6/2015-gmc-sierra-1500-v853l"
+   ],
+   "note": "Interstate lists this for the 2015 Sierra 1500 5.3L.",
+   "id": "battery-interstate-mtz-48-h6",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "battery",
+   "brand": "ACDelco",
+   "part": "94RAGM",
+   "name": "ACDelco Gold 94RAGM AGM (GM 88864542), group 94R, 850 CCA",
+   "group": "94R",
+   "cca": 850,
+   "agm": true,
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10135250-9999.pdf"
+   ],
+   "note": "Stop/start: AGM required.",
+   "id": "battery-acdelco-94ragm",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "battery",
+   "brand": "Super Start",
+   "part": "94RPLT",
+   "name": "Super Start Platinum AGM 94RPLT, group 94R, 800 CCA",
+   "group": "94R",
+   "cca": 800,
+   "agm": true,
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://www.oreillyauto.com/shop/b/battery---accessories/batteries/31624da3221a/v/a/140389/automotive-truck-2017-buick-envision"
+   ],
+   "id": "battery-super-start-94rplt",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "battery",
+   "brand": "ACDelco",
+   "part": "47PS",
+   "name": "ACDelco Professional 47PS (GM 88865274), group 47/H5, 525 CCA",
+   "group": "47",
+   "cca": 525,
+   "fits": [
+    "sonic12"
+   ],
+   "src": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10135250-9999.pdf"
+   ],
+   "id": "battery-acdelco-47ps",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "battery",
+   "brand": "Duralast",
+   "part": "H5-DLG",
+   "name": "Duralast Gold H5-DLG, group 47/H5, 650 CCA",
+   "group": "47",
+   "cca": 650,
+   "fits": [
+    "sonic12"
+   ],
+   "src": [
+    "https://www.autozone.com/batteries-starting-and-charging/battery/chevrolet/sonic/2012"
+   ],
+   "id": "battery-duralast-h5-dlg",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "battery",
+   "brand": "Duralast",
+   "part": "H5-AGM",
+   "name": "Duralast Platinum H5-AGM, group 47/H5, 680 CCA",
+   "group": "47",
+   "cca": 680,
+   "agm": true,
+   "fits": [
+    "sonic12"
+   ],
+   "src": [
+    "https://www.autozone.com/batteries-starting-and-charging/battery/chevrolet/sonic/2012"
+   ],
+   "id": "battery-duralast-h5-agm",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "airFilter",
+   "brand": "ACDelco",
+   "part": "A3181C",
+   "name": "ACDelco Gold A3181C engine air filter (GM 22845992)",
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://www.gmc.com/ownercenter/content/dam/gmownercenter/gmna/dynamic/manuals/2015/gmc/sierra_1500/2015_gmc_sierra_owners.pdf"
+   ],
+   "id": "airfilter-acdelco-a3181c",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "airFilter",
+   "brand": "ACDelco",
+   "part": "A3201C",
+   "name": "ACDelco Gold A3201C engine air filter (GM 22971580)",
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://contentdelivery.ext.gm.com/content/dam/cope/en_us/public/pdf_assets/active/owners_manuals_browse/2017/17_BUI_Envision_OM_en_US_23219853B_2016NOV10_2P.pdf"
+   ],
+   "id": "airfilter-acdelco-a3201c",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "airFilter",
+   "brand": "GM",
+   "part": "96950990",
+   "name": "GM Genuine 96950990 engine air filter",
+   "fits": [
+    "sonic12"
+   ],
+   "src": [
+    "https://assets.gm.com/manuals/chevrolet/2012_chevrolet_sonic_owners.pdf"
+   ],
+   "note": "The 2012 manual lists one air filter for both Sonic engines.",
+   "id": "airfilter-gm-96950990",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "cabinFilter",
+   "brand": "ACDelco",
+   "part": "CF188",
+   "name": "ACDelco Gold CF188 cabin air filter (GM 22808781)",
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://www.gmc.com/ownercenter/content/dam/gmownercenter/gmna/dynamic/manuals/2015/gmc/sierra_1500/2015_gmc_sierra_owners.pdf"
+   ],
+   "id": "cabinfilter-acdelco-cf188",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "cabinFilter",
+   "brand": "ACDelco",
+   "part": "CF185",
+   "name": "ACDelco Gold CF185 cabin air filter (GM 13508023)",
+   "fits": [
+    "envision17"
+   ],
+   "src": [
+    "https://contentdelivery.ext.gm.com/content/dam/cope/en_us/public/pdf_assets/active/owners_manuals_browse/2017/17_BUI_Envision_OM_en_US_23219853B_2016NOV10_2P.pdf"
+   ],
+   "id": "cabinfilter-acdelco-cf185",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "cabinFilter",
+   "brand": "ACDelco",
+   "part": "CF181",
+   "name": "ACDelco Gold CF181 cabin air filter (GM 13271190)",
+   "fits": [
+    "sonic12"
+   ],
+   "src": [
+    "https://assets.gm.com/manuals/chevrolet/2012_chevrolet_sonic_owners.pdf"
+   ],
+   "id": "cabinfilter-acdelco-cf181",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "ACDelco",
+   "part": "dexos1 0W-20 5qt",
+   "name": "ACDelco dexos1 Full Synthetic 0W-20, 5 qt",
+   "viscosity": "0W-20",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-acdelco-dexos1-0w-20-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "ACDelco",
+   "part": "dexos1 5W-30 5qt",
+   "name": "ACDelco dexos1 Full Synthetic 5W-30, 5 qt",
+   "viscosity": "5W-30",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-acdelco-dexos1-5w-30-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Mobil 1",
+   "part": "Advanced FS 0W-8 1qt",
+   "name": "Mobil 1 Advanced Full Synthetic 0W-8, 1 qt",
+   "viscosity": "0W-8",
+   "synth": "Synthetic",
+   "size": 1,
+   "id": "oil-mobil-1-advanced-fs-0w-8-1qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Mobil 1",
+   "part": "Advanced FS 0W-16 5qt",
+   "name": "Mobil 1 Advanced Full Synthetic 0W-16, 5 qt",
+   "viscosity": "0W-16",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-mobil-1-advanced-fs-0w-16-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Mobil 1",
+   "part": "Advanced FS 0W-20 5qt",
+   "name": "Mobil 1 Advanced Full Synthetic 0W-20, 5 qt",
+   "viscosity": "0W-20",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-mobil-1-advanced-fs-0w-20-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Mobil 1",
+   "part": "Advanced FS 0W-20 1qt",
+   "name": "Mobil 1 Advanced Full Synthetic 0W-20, 1 qt",
+   "viscosity": "0W-20",
+   "synth": "Synthetic",
+   "size": 1,
+   "id": "oil-mobil-1-advanced-fs-0w-20-1qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Mobil 1",
+   "part": "Advanced FS 5W-20 5qt",
+   "name": "Mobil 1 Advanced Full Synthetic 5W-20, 5 qt",
+   "viscosity": "5W-20",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-mobil-1-advanced-fs-5w-20-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Mobil 1",
+   "part": "Advanced FS 5W-30 5qt",
+   "name": "Mobil 1 Advanced Full Synthetic 5W-30, 5 qt",
+   "viscosity": "5W-30",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-mobil-1-advanced-fs-5w-30-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Mobil 1",
+   "part": "Advanced FS 5W-30 1qt",
+   "name": "Mobil 1 Advanced Full Synthetic 5W-30, 1 qt",
+   "viscosity": "5W-30",
+   "synth": "Synthetic",
+   "size": 1,
+   "id": "oil-mobil-1-advanced-fs-5w-30-1qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Mobil 1",
+   "part": "FS 0W-40 5qt",
+   "name": "Mobil 1 FS European Car Formula 0W-40, 5 qt",
+   "viscosity": "0W-40",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-mobil-1-fs-0w-40-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Mobil 1",
+   "part": "High Mileage 10W-30 5qt",
+   "name": "Mobil 1 High Mileage Full Synthetic 10W-30, 5 qt",
+   "viscosity": "10W-30",
+   "synth": "High mileage",
+   "size": 5,
+   "id": "oil-mobil-1-high-mileage-10w-30-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Castrol",
+   "part": "EDGE 0W-20 5qt",
+   "name": "Castrol EDGE Full Synthetic 0W-20, 5 qt",
+   "viscosity": "0W-20",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-castrol-edge-0w-20-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Castrol",
+   "part": "EDGE 5W-30 5qt",
+   "name": "Castrol EDGE Full Synthetic 5W-30, 5 qt",
+   "viscosity": "5W-30",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-castrol-edge-5w-30-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Castrol",
+   "part": "GTX 10W-30 5qt",
+   "name": "Castrol GTX Conventional 10W-30, 5 qt",
+   "viscosity": "10W-30",
+   "synth": "Conventional",
+   "size": 5,
+   "id": "oil-castrol-gtx-10w-30-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Castrol",
+   "part": "GTX HM 20W-50 5qt",
+   "name": "Castrol GTX High Mileage 20W-50, 5 qt",
+   "viscosity": "20W-50",
+   "synth": "High mileage",
+   "size": 5,
+   "id": "oil-castrol-gtx-hm-20w-50-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Pennzoil",
+   "part": "Platinum 0W-20 5qt",
+   "name": "Pennzoil Platinum Full Synthetic 0W-20, 5 qt",
+   "viscosity": "0W-20",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-pennzoil-platinum-0w-20-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Pennzoil",
+   "part": "Platinum 5W-30 5qt",
+   "name": "Pennzoil Platinum Full Synthetic 5W-30, 5 qt",
+   "viscosity": "5W-30",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-pennzoil-platinum-5w-30-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Pennzoil",
+   "part": "Ultra Platinum 0W-16 5qt",
+   "name": "Pennzoil Ultra Platinum 0W-16, 5 qt",
+   "viscosity": "0W-16",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-pennzoil-ultra-platinum-0w-16-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Valvoline",
+   "part": "Advanced FS 0W-20 5qt",
+   "name": "Valvoline Advanced Full Synthetic 0W-20, 5 qt",
+   "viscosity": "0W-20",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-valvoline-advanced-fs-0w-20-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Valvoline",
+   "part": "Advanced FS 5W-30 5qt",
+   "name": "Valvoline Advanced Full Synthetic 5W-30, 5 qt",
+   "viscosity": "5W-30",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-valvoline-advanced-fs-5w-30-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Valvoline",
+   "part": "MaxLife HM 10W-40 5qt",
+   "name": "Valvoline High Mileage MaxLife 10W-40, 5 qt",
+   "viscosity": "10W-40",
+   "synth": "High mileage",
+   "size": 5,
+   "id": "oil-valvoline-maxlife-hm-10w-40-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Quaker State",
+   "part": "Full Synthetic 5W-30 5qt",
+   "name": "Quaker State Full Synthetic 5W-30, 5 qt",
+   "viscosity": "5W-30",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-quaker-state-full-synthetic-5w-30-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Quaker State",
+   "part": "Full Synthetic 0W-20 5qt",
+   "name": "Quaker State Full Synthetic 0W-20, 5 qt",
+   "viscosity": "0W-20",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-quaker-state-full-synthetic-0w-20-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Royal Purple",
+   "part": "HPS 5W-30 5qt",
+   "name": "Royal Purple High Performance Street 5W-30, 5 qt",
+   "viscosity": "5W-30",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-royal-purple-hps-5w-30-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "AMSOIL",
+   "part": "Signature Series 0W-20 1qt",
+   "name": "AMSOIL Signature Series 0W-20, 1 qt",
+   "viscosity": "0W-20",
+   "synth": "Synthetic",
+   "size": 1,
+   "id": "oil-amsoil-signature-series-0w-20-1qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "AMSOIL",
+   "part": "Signature Series 5W-30 1qt",
+   "name": "AMSOIL Signature Series 5W-30, 1 qt",
+   "viscosity": "5W-30",
+   "synth": "Synthetic",
+   "size": 1,
+   "id": "oil-amsoil-signature-series-5w-30-1qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Motorcraft",
+   "part": "Synthetic Blend 5W-20 5qt",
+   "name": "Motorcraft Synthetic Blend 5W-20, 5 qt",
+   "viscosity": "5W-20",
+   "synth": "Blend",
+   "size": 5,
+   "id": "oil-motorcraft-synthetic-blend-5w-20-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Shell Rotella",
+   "part": "T6 5W-40 1gal",
+   "name": "Shell Rotella T6 Full Synthetic 5W-40, 1 gal",
+   "viscosity": "5W-40",
+   "synth": "Synthetic",
+   "size": 4,
+   "id": "oil-shell-rotella-t6-5w-40-1gal",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Shell Rotella",
+   "part": "T4 15W-40 1gal",
+   "name": "Shell Rotella T4 Triple Protection 15W-40, 1 gal",
+   "viscosity": "15W-40",
+   "synth": "Conventional",
+   "size": 4,
+   "id": "oil-shell-rotella-t4-15w-40-1gal",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Liqui Moly",
+   "part": "Special Tec AA 0W-20 5L",
+   "name": "Liqui Moly Special Tec AA 0W-20, 5 L (5.3 qt)",
+   "viscosity": "0W-20",
+   "synth": "Synthetic",
+   "size": 5.28,
+   "id": "oil-liqui-moly-special-tec-aa-0w-20-5l",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Amazon Basics",
+   "part": "Full Synthetic 0W-20 5qt",
+   "name": "Amazon Basics Full Synthetic 0W-20, 5 qt",
+   "viscosity": "0W-20",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-amazon-basics-full-synthetic-0w-20-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "oil",
+   "brand": "Amazon Basics",
+   "part": "Full Synthetic 5W-30 5qt",
+   "name": "Amazon Basics Full Synthetic 5W-30, 5 qt",
+   "viscosity": "5W-30",
+   "synth": "Synthetic",
+   "size": 5,
+   "id": "oil-amazon-basics-full-synthetic-5w-30-5qt",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "tires",
+   "brand": "Michelin",
+   "part": "Defender LTX M/S2 265/65R18",
+   "name": "Michelin Defender LTX M/S2 265/65R18",
+   "size": "265/65R18",
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://www.gmc.com/ownercenter/content/dam/gmownercenter/gmna/dynamic/manuals/2015/gmc/sierra_1500/2015_gmc_sierra_owners.pdf"
+   ],
+   "note": "265/65R18 is one of the factory sizes the 2015 Sierra manual lists; check your door placard.",
+   "id": "tires-michelin-defender-ltx-m-s2-265-65r18",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "tires",
+   "brand": "Goodyear",
+   "part": "Wrangler Workhorse HT 265/65R18",
+   "name": "Goodyear Wrangler Workhorse HT 265/65R18",
+   "size": "265/65R18",
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://www.gmc.com/ownercenter/content/dam/gmownercenter/gmna/dynamic/manuals/2015/gmc/sierra_1500/2015_gmc_sierra_owners.pdf"
+   ],
+   "id": "tires-goodyear-wrangler-workhorse-ht-265-65r18",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "tires",
+   "brand": "BFGoodrich",
+   "part": "Trail-Terrain T/A 265/65R18",
+   "name": "BFGoodrich Trail-Terrain T/A 265/65R18",
+   "size": "265/65R18",
+   "fits": [
+    "sierra15"
+   ],
+   "src": [
+    "https://www.gmc.com/ownercenter/content/dam/gmownercenter/gmna/dynamic/manuals/2015/gmc/sierra_1500/2015_gmc_sierra_owners.pdf"
+   ],
+   "id": "tires-bfgoodrich-trail-terrain-t-a-265-65r18",
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "tires",
+   "brand": "Michelin",
+   "part": "CrossClimate2 235/50R19",
+   "name": "Michelin CrossClimate2 235/50R19",
+   "size": "235/50R19",
+   "fits": [
+    "envision17"
+   ],
+   "note": "Envision size depends on trim (18 or 19 in); check your door placard.",
+   "id": "tires-michelin-crossclimate2-235-50r19",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "tires",
+   "brand": "Michelin",
+   "part": "CrossClimate2 235/55R18",
+   "name": "Michelin CrossClimate2 235/55R18",
+   "size": "235/55R18",
+   "fits": [
+    "envision17"
+   ],
+   "note": "Envision size depends on trim (18 or 19 in); check your door placard.",
+   "id": "tires-michelin-crossclimate2-235-55r18",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "tires",
+   "brand": "Goodyear",
+   "part": "Assurance WeatherReady 235/55R18",
+   "name": "Goodyear Assurance WeatherReady 235/55R18",
+   "size": "235/55R18",
+   "fits": [
+    "envision17"
+   ],
+   "id": "tires-goodyear-assurance-weatherready-235-55r18",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "tires",
+   "brand": "Michelin",
+   "part": "Defender2 205/55R16",
+   "name": "Michelin Defender2 205/55R16",
+   "size": "205/55R16",
+   "fits": [
+    "sonic12"
+   ],
+   "note": "Sonic size depends on trim (15–17 in); check your door placard.",
+   "id": "tires-michelin-defender2-205-55r16",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "tires",
+   "brand": "Michelin",
+   "part": "Defender2 195/65R15",
+   "name": "Michelin Defender2 195/65R15",
+   "size": "195/65R15",
+   "fits": [
+    "sonic12"
+   ],
+   "note": "Sonic size depends on trim (15–17 in); check your door placard.",
+   "id": "tires-michelin-defender2-195-65r15",
+   "src": [],
+   "offers": [],
+   "best": null
+  },
+  {
+   "cat": "tires",
+   "brand": "Continental",
+   "part": "TrueContact Tour 205/55R16",
+   "name": "Continental TrueContact Tour 205/55R16",
+   "size": "205/55R16",
+   "fits": [
+    "sonic12"
+   ],
+   "id": "tires-continental-truecontact-tour-205-55r16",
+   "src": [],
+   "offers": [],
+   "best": null
+  }
+ ]
+}

@@ -34,3 +34,14 @@ index.html · styles.css · app.js (app) · rewards-data.js (rewards reference l
 - Backend: Supabase project `mzaviklrqweptobljfoo`, table `public.records` with row-level security, so each signed-in user can only read and write their own rows. There are no hard deletes. Only the public publishable key is in the client.
 - `vendor/supabase.js` is a local copy of supabase-js. It's loaded only when you use sync.
 - Sync isn't included in `autolog-standalone.html`.
+
+## Version 6: parts, inventory, statistics, dashboard (Oct 2026)
+- **Parts catalog** (`parts-catalog.json`, built by `tools/build-parts-catalog.js` from `tools/parts-base.json` plus part numbers users add). Brand → Part pickers with "Other / custom" on oil, oil filter, plugs, coils, battery, tires, engine and cabin air filters, filtered by vehicle fitment (show-all toggle).
+- **No retailer scraping.** Amazon, Walmart, AutoZone, Advance, O'Reilly, RockAuto and Discount Tire block automated access, so prices shown are ones you paid or noted. Last-known prices are kept and marked stale. `PRICE_FEEDS` in the builder is where a sanctioned price API would plug in.
+- **Fitment card** on every form: oil capacity with filter, viscosity, plug gap and count, battery group and CCA, tire size and PSI, filter part numbers, with owner's-manual suggestions for known vehicles.
+- **Price paid is required** on new entries. $0 needs the "Free / warranty / no charge" box.
+- **Inventory** (low-stock reminders, "use from inventory" decrements stock) and **planned parts** (bought → inventory, install → pre-filled service entry).
+- **Statistics on the device:** component life, best-value leaderboards, a deep dive (correlations, regression with 95% CI, before/after tests, seasonality, outliers, multi-factor OLS) with plain-language confidence notes, TCO, and CSV export.
+- **Dashboard** with a total-cost-of-ownership hero (per mile/month/year, all-vehicles toggle) and a 12-month projection. A **Vehicle overview** tab shows what's installed now.
+- Sync: parts, plans and inventory sync as account-wide records (`maint` rows with `_vid = "__acct"`), so older app versions keep them untouched.
+- Daily job: `tools/update-parts-catalog.sh` (validates, publishes only if changed).

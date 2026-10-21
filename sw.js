@@ -1,8 +1,8 @@
 /* AutoLog service worker: offline app shell, update prompt, reminder notifications */
-const CACHE = 'autolog-v5';
+const CACHE = 'autolog-v6';
 const DATA = 'autolog-data'; // reminder snapshot written by the page (never deleted on upgrade)
 const ASSETS = [
-  './', './index.html', './styles.css', './app.js', './rewards-data.js', './sync.js', './vendor/supabase.js', './manifest.json',
+  './', './index.html', './styles.css', './app.js', './rewards-data.js', './parts-catalog.json', './sync.js', './vendor/supabase.js', './manifest.json',
   './favicon.ico', './icons/favicon-32.png', './icons/favicon-16.png', './icons/logo-192.png',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
 ];
@@ -27,6 +27,12 @@ self.addEventListener('fetch', e => {
     // Network first so a new deploy shows up right away; offline falls back to this page's cached copy, then the app shell.
     e.respondWith(fetch(req).then(r => { if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return r; })
       .catch(() => caches.match(req, { ignoreSearch: true }).then(hit => hit || caches.match('./index.html'))));
+    return;
+  }
+  if (new URL(req.url).pathname.endsWith('/parts-catalog.json')) {
+    // Catalog refreshes daily: network first, cached copy offline.
+    e.respondWith(fetch(req).then(r => { if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put('./parts-catalog.json', copy)); } return r; })
+      .catch(() => caches.match('./parts-catalog.json', { ignoreSearch: true })));
     return;
   }
   e.respondWith(caches.match(req).then(hit => {
