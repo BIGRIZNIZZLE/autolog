@@ -1,10 +1,11 @@
 /* AutoLog service worker: offline app shell, update prompt, reminder notifications */
-const CACHE = 'autolog-v6';
+const CACHE = 'autolog-v7';
 const DATA = 'autolog-data'; // reminder snapshot written by the page (never deleted on upgrade)
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './rewards-data.js', './parts-catalog.json', './sync.js', './vendor/supabase.js', './manifest.json',
   './favicon.ico', './icons/favicon-32.png', './icons/favicon-16.png', './icons/logo-192.png',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
+  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png',
+  './img/riznoss-crest-solid.webp', './img/riznoss-crest.webp', './img/riznoss-lockup.webp', './img/riznoss-watermark.png'
 ];
 self.addEventListener('install', e => {
   e.waitUntil((async () => {

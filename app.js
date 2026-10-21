@@ -967,7 +967,30 @@ function viewGarage() {
       ${installPrompt ? `<div class="setting"><b>Install</b><small>Add AutoLog to your home screen for one-tap access.</small><div><button class="btn small primary" data-act="install">Install app</button></div></div>`
         : `<div class="setting"><b>Install on your phone</b><small>iPhone: tap Share, then Add to Home Screen. Android: open the browser menu and tap Install app.</small></div>`}
       <div class="setting"><b>Danger zone</b><div><button class="btn small ghost-danger" data-act="eraseAll" ${db.vehicles.length ? '' : 'disabled'}>${I.trash} Erase all data</button></div></div>
-    </section><p class="muted" style="text-align:center;font-size:.78rem">AutoLog v1 · works offline · no account, no tracking</p>`;
+    </section>${rzFoot()}`;
+}
+/* ---------- RIZNOSS branding ---------- */
+const APP_VERSION = '7';
+const rzFoot = () => `<a href="#/about" class="rz-foot"><img src="img/riznoss-crest-solid.webp" alt="" width="26" height="30" loading="lazy" decoding="async"><b>RIZNOSS · Chamber 01</b><span>AutoLog v${APP_VERSION} · works offline · your data stays yours</span><i>Protect ya data.</i></a>`;
+function viewAbout() {
+  const n = db.vehicles.length, recs = db.vehicles.reduce((t, v) => t + v.fuel.length + SECTIONS.reduce((u, sc) => u + (v.maint[sc.id] || []).length, 0), 0);
+  const synced = !!(window.AutoLogSync && window.AutoLogSync.status && window.AutoLogSync.status().signedIn);
+  return `<a href="#/garage" class="back">${I.back} Garage</a>
+    <section class="card rz-about"><img src="img/riznoss-lockup.webp" alt="RIZNOSS" width="220" height="213" decoding="async">
+      <p class="rz-ch">RIZNOSS presents · Chamber 01</p><h2>AutoLog</h2><p class="rz-alias">The Mileage Monk</p>
+      <p class="rz-copy">Fuel, maintenance, parts and the true cost of owning your vehicles, tracked on your own device. No ads, no tracking. Sync only happens if you sign in.</p>
+      <div class="rz-meta"><div><span>Version</span><b>v${APP_VERSION}</b></div><div><span>Your data</span><b>${synced ? 'This device + your account' : 'This device only'}</b></div><div><span>Vehicles</span><b>${fmt(n)}</b></div><div><span>Records</span><b>${fmt(recs)}</b></div></div>
+      <div class="rz-sign">Protect ya data.</div></section>
+    <section class="card"><h3>Keep it safe</h3><p class="muted" style="margin:6px 0 10px">Export a backup now and then. It’s one file you can import on any device.</p><div class="btn-row"><button class="btn small" data-act="export">${I.download || ''} Export backup</button><a class="btn small" href="#/garage">Settings</a></div></section>`;
+}
+function showSplash() {
+  try { if (sessionStorage.getItem('autolog:splash') || /[?&]nosplash\b/.test(location.search)) return; sessionStorage.setItem('autolog:splash', '1'); } catch (e) { return; }
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const el = document.createElement('div'); el.className = 'rz-splash'; el.setAttribute('role', 'presentation');
+  el.innerHTML = `<div class="rz-in"><img src="img/riznoss-lockup.webp" alt="RIZNOSS" width="236" height="228" decoding="async"><p class="rz-presents"><b>RIZNOSS</b> presents · Chamber 01</p><p class="rz-app">AutoLog</p></div><div class="rz-skip">Tap to skip</div>`;
+  let done = false; const close = () => { if (done) return; done = true; el.classList.add('out'); setTimeout(() => el.remove(), reduce ? 0 : 380); document.removeEventListener('keydown', close, true); };
+  el.addEventListener('pointerdown', close); document.addEventListener('keydown', close, true);
+  document.body.appendChild(el); setTimeout(close, reduce ? 900 : 1500);
 }
 
 
@@ -1276,7 +1299,7 @@ function icsFor(items) {
   const e = t => String(t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
   const dt = d => d.replace(/-/g, ''), today = todayISO();
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
-  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AutoLog//Reminders//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:AutoLog'];
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//RIZNOSS//AutoLog Chamber 01 Reminders//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:AutoLog'];
   items.forEach(i => {
     const day = i.effDate && i.effDate > today ? i.effDate : today;
     L.push('BEGIN:VEVENT', `UID:${i.key.replace(/[^\w-]/g, '-')}@autolog.app`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${dt(day)}`, `DTEND;VALUE=DATE:${dt(addDays(day, 1))}`,
@@ -2205,10 +2228,11 @@ function render() {
   const [page = 'dash', sub] = (location.hash.replace(/^#\/?/, '') || 'dash').split('/');
   const v = cur(), app = $('#app');
   $('#vname').textContent = vname(v);
-  $$('#tabbar a').forEach(a => a.classList.toggle('on', a.dataset.tab === page || (page === 'comp' && a.dataset.tab === 'overview') || (['inventory', 'plan', 'stats'].includes(page) && a.dataset.tab === 'service')));
+  $$('#tabbar a').forEach(a => a.classList.toggle('on', a.dataset.tab === page || (page === 'comp' && a.dataset.tab === 'overview') || (['inventory', 'plan', 'stats'].includes(page) && a.dataset.tab === 'service') || (page === 'about' && a.dataset.tab === 'garage')));
   const fab = $('#fab'); fab.hidden = true; fab.onclick = null;
   let html;
   if (page === 'garage') html = viewGarage();
+  else if (page === 'about') html = viewAbout();
   else if (page === 'rewards') { html = sub ? viewProgram(sub) : viewRewards(); if (!sub) { fab.hidden = false; fab.setAttribute('aria-label', 'Add rewards program'); fab.onclick = pickLibrary; } }
   else if (page === 'reminders') html = viewReminders();
   else if (page === 'inventory') { html = viewInventory(); fab.hidden = false; fab.setAttribute('aria-label', 'Add inventory item'); fab.onclick = () => pickCategory('Add to inventory', c => invForm(null, c)); }
@@ -2284,7 +2308,7 @@ window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); instal
 setupSW();
 window.addEventListener('storage', e => { if (e.key === KEY) { db = load(); render(); } });
 
-applyTheme(); render(); syncSnapshot(); setTimeout(() => checkNotify(), 1500); loadCatalog();
+showSplash(); applyTheme(); render(); syncSnapshot(); setTimeout(() => checkNotify(), 1500); loadCatalog();
 // Bridge for the optional sync module (sync.js). Sync replaces data only through here.
 window.AutoLogApp = {
   getDb: () => db,

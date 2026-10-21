@@ -45,3 +45,10 @@ index.html · styles.css · app.js (app) · rewards-data.js (rewards reference l
 - **Dashboard** with a total-cost-of-ownership hero (per mile/month/year, all-vehicles toggle) and a 12-month projection. A **Vehicle overview** tab shows what's installed now.
 - Sync: parts, plans and inventory sync as account-wide records (`maint` rows with `_vid = "__acct"`), so older app versions keep them untouched.
 - Daily job: `tools/update-parts-catalog.sh` (validates, publishes only if changed).
+
+## Version 7: RIZNOSS branding (Oct 2026)
+- AutoLog is **RIZNOSS Chamber 01, "The Mileage Monk."** Brand images are in `img/`, built from `brand/riznoss-emblem.jpg` by `tools/make-brand.py`, with the black background masked to transparency.
+- **Launch splash:** "RIZNOSS presents · Chamber 01". At most once per browser session, about 1.5 s, tap or any key skips it. With reduced motion it's static and closes after 0.9 s. `?nosplash` skips it.
+- **Branding:** the R crest sits in the header (it opens About), and a faint crest appears in the dashboard cost card. A low-opacity watermark sits behind the page content and never takes taps.
+- **About** (`#/about`) and the Garage footer show "Chamber 01 · The Mileage Monk" and "Protect ya data."
+- The calendar export (.ics) PRODID now names RIZNOSS. The home-screen icon is unchanged.
