@@ -79,3 +79,26 @@ index.html · styles.css · app.js (app) · rewards-data.js (rewards reference l
 - **Parts.** New inventory and plan categories: chain/sprockets/belt, CVT belt, gear oil, impeller kit, fuel/water separator, anodes, trailer parts. Part numbers are user-added only; the catalog ships none for these.
 - **Sync and old versions.** New fields and sections sync as ordinary records. Older app versions keep unknown sections and fields. `tools/test-types-old.js` runs v7 and v8 on v9 data and checks that nothing is dropped.
 - Tests: `node tools/test-types.js` and `node tools/test-types-old.js`. Screenshots: `node tools/shots-types.js`.
+
+## Version 10: vehicle pickers and engine details (Oct 2026)
+
+- **Find your vehicle.** Add/Edit Vehicle has searchable dropdowns: Type → Year → Make → Model → Trim / engine. Every list has **Other / type my own** and a "Use “…” (my own)" row.
+  - **Cars and trucks:** makes and models from EPA fueleconomy.gov, plus NHTSA vPIC (passenger car, MPV and truck types). Trim / engine lists EPA's engine options (for example "Auto (S8), 4 cyl, 2.5 L"). Picking one fills size (L), cylinders, aspiration, fuel, transmission and drive.
+  - **Motorcycles:** makes and models from NHTSA vPIC (motorcycle type).
+  - **ATV / UTV:** NHTSA vPIC off-road vehicle + motorcycle types (UTV also adds low-speed vehicle). NHTSA files most Polaris, Can-Am and similar models under "motorcycle". It doesn't separate ATVs from UTVs.
+  - **Boats:** there's no free boat database, so you type the make, model, engine maker and engine. Entries you type are remembered.
+- **Engine section:** size in L and cc, cylinders, layout, aspiration, horsepower, fuel and notes. Each field is tagged with its source (EPA, NHTSA or You).
+  - EPA doesn't publish cc or layout (V vs inline), so AutoLog leaves those for you or for a VIN lookup. Nothing is invented.
+  - The engine summary shows on the dashboard header, the garage card and the Overview.
+- **Fill details from database** (in the form and on Overview) uses EPA for cars, and the VIN for every type. A VIN lookup now fills displacement (L and cc), cylinders, layout and horsepower when NHTSA has them.
+  - Empty fields are filled.
+  - Values you typed are only replaced after a "Replace / Keep mine" prompt.
+- **Your own entries:** makes, models and engines you type are saved to `vlib` and offered next time. They sync like parts.
+- **My part numbers** (Overview): save exact part numbers for each vehicle. They appear marked ✓ in that vehicle's service pickers.
+- **Lookups** are cached in localStorage for 30 days (EPA vehicle details 180 days), debounced, and fall back to stale cache or free text when offline. Both APIs allow CORS.
+- **iPhone scroll fix (Safari, Brave and every iOS browser):** opening a dropdown or field in a sheet used to drag the whole page down and leave it stuck. Three causes, all fixed:
+  - Nothing locked the page behind open sheets, so iOS scrolled the document under the fixed dialog. The page is now pinned while any dialog is open, and its position is restored when the last one closes.
+  - Sheets were sized in `vh`, which on iOS is the toolbar-hidden height. They're now sized in `dvh`.
+  - Some inputs were under 16px (tire tread 12.8px, price notes 15.2px), which triggers zoom-on-focus. Every text control is now at least 16px.
+  - Sheet bodies and lists use `overscroll-behavior: contain`.
+  - Checked with `tools/test-ios-scroll.js` (Playwright WebKit, iPhone 13).

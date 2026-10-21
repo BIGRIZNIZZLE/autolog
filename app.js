@@ -47,6 +47,8 @@ const I = {
   trash: svg('<path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/>'),
   edit: svg('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>'),
   check: svg('<path d="M20 6 9 17l-5-5"/>'),
+  chev: svg('<path d="m6 9 6 6 6-6"/>'),
+  engine: svg('<path d="M4 10h2V8h4V6h4v2h3l2 3h1v5h-1l-2 3H8l-2-2H4z"/><path d="M2 12v3"/>'),
   gift: svg('<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9H5v-9"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/>'),
   link: svg('<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'),
   search: svg('<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>'),
@@ -422,24 +424,34 @@ const VEHICLE_FIELDS = [
   { k: 'cooling', l: 'Engine cooling', t: 'seg', opts: ['Liquid-cooled', 'Air-cooled'], def: 'Liquid-cooled', showIf: x => x.typeL === 'Motorcycle', hint: 'Air-cooled bikes hide the coolant section.' },
   { k: 'vin', l: 'VIN', t: 'vin', showIf: x => x.typeL !== 'Boat' },
   { k: 'hin', l: 'HIN (hull ID number)', t: 'text', ph: 'Usually 12 characters on the transom', showIf: x => x.typeL === 'Boat', hint: 'Saved exactly as typed. AutoLog doesn’t decode HINs; enter the specs yourself.' },
+  H('Find your vehicle'),
+  { k: 'year', l: 'Year', t: 'combo', numeric: 1, half: 1, req: 1, srcTag: 1, ph: 'Pick or type' }, { k: 'make', l: 'Make', t: 'combo', half: 1, req: 1, srcTag: 1, ph: 'Pick or type' },
+  { k: 'model', l: 'Model', t: 'combo', half: 1, req: 1, srcTag: 1, ph: 'Pick or type' }, { k: 'trim', l: 'Trim / engine', t: 'combo', half: 1, srcTag: 1, ph: 'Pick or type' },
+  { k: 'vfill', l: 'Fill details from database', t: 'btn', hint: 'Uses the year, make and model (and VIN if you entered one). Asks before replacing anything you typed.' },
   { k: 'name', l: 'Nickname', t: 'text', ph: 'e.g. Daily driver' },
-  { k: 'year', l: 'Year', t: 'num', step: 1, half: 1, req: 1 }, { k: 'make', l: 'Make', t: 'text', half: 1, req: 1 },
-  { k: 'model', l: 'Model', t: 'text', half: 1, req: 1 }, { k: 'trim', l: 'Trim / engine', t: 'text', half: 1 },
   { k: 'odometer', l: 'Current odometer', t: 'num', unit: 'mi', step: 'any', half: 1 }, { k: 'tank', l: 'Tank size', t: 'num', unit: 'gal', step: 0.1, half: 1, hint: 'Used for estimated range. Leave it blank to use your largest fill.' },
+  H('Engine'),
+  { k: 'engDispL', l: 'Size (liters)', t: 'num', unit: 'L', step: 'any', half: 1, srcTag: 1 }, { k: 'engCc', l: 'Size (cc)', t: 'num', unit: 'cc', step: 1, half: 1, srcTag: 1 },
+  { k: 'engCyl', l: 'Cylinders', t: 'num', step: 1, half: 1, srcTag: 1 }, { k: 'engConfig', l: 'Configuration', t: 'combo', half: 1, srcTag: 1, ph: 'e.g. Inline-4, V-twin' },
+  { k: 'engAsp', l: 'Aspiration', t: 'select', opts: ['', 'Naturally aspirated', 'Turbo', 'Twin-turbo', 'Supercharged', 'Turbo + supercharged'], half: 1, srcTag: 1 }, { k: 'engHp', l: 'Horsepower', t: 'num', unit: 'hp', step: 1, half: 1, srcTag: 1 },
+  { k: 'engMake', l: 'Engine / outboard make', t: 'combo', half: 1, srcTag: 1, showIf: x => x.typeL === 'Boat', ph: 'Type it in' }, { k: 'engModel', l: 'Engine model', t: 'text', half: 1, showIf: x => x.typeL === 'Boat' },
+  { k: 'fuelType', l: 'Fuel type', t: 'combo', half: 1, srcTag: 1 }, { k: 'engine', l: 'Engine notes', t: 'text', half: 1, srcTag: 1, ph: 'e.g. 1.5 L · SIDI' },
   H('Details'),
-  { k: 'engine', l: 'Engine', t: 'text', ph: 'e.g. 1.5 L · 4 cyl · In-Line' },
-  { k: 'fuelType', l: 'Fuel type', t: 'text', half: 1 }, { k: 'drive', l: 'Drive type', t: 'text', half: 1 },
-  { k: 'body', l: 'Body', t: 'text', half: 1 }, { k: 'transmission', l: 'Transmission', t: 'text', half: 1 },
+  { k: 'drive', l: 'Drive type', t: 'text', half: 1, srcTag: 1 }, { k: 'transmission', l: 'Transmission', t: 'text', half: 1, srcTag: 1 },
+  { k: 'body', l: 'Body', t: 'text', half: 1, srcTag: 1 },
   F.notes,
 ];
+const ENG_CONFIGS = ['Single', 'Parallel twin', 'V-twin', 'Flat-twin (boxer)', 'Triple', 'Inline-3', 'Inline-4', 'Inline-5', 'Inline-6', 'V4', 'V6', 'V8', 'V10', 'V12', 'Flat-4', 'Flat-6', 'W12', 'Rotary', 'Electric motor'];
+const FUELS = ['Regular gasoline', 'Midgrade gasoline', 'Premium gasoline', 'Diesel', 'E85 / flex fuel', 'Ethanol-free (E0)', 'Hybrid (gasoline)', 'Plug-in hybrid', 'Electric', 'Two-stroke premix'];
+const VFIELD_L = k => { const f = VEHICLE_FIELDS.find(x => x.k === k); return f ? f.l + (f.unit ? ` (${f.unit})` : '') : k; };
 
 /* ---------- storage ---------- */
-function blank() { return { version: 1, vehicles: [], programs: [], parts: [], plans: [], inventory: [], settings: { theme: 'auto', current: null } }; }
+function blank() { return { version: 1, vehicles: [], programs: [], parts: [], plans: [], inventory: [], vlib: [], settings: { theme: 'auto', current: null } }; }
 function normalize(j) {
   j.version = 2; j.settings = Object.assign({ theme: 'auto', current: null }, j.settings || {});
   j.vehicles = (j.vehicles || []).filter(v => v && v.id);
   j.programs = (Array.isArray(j.programs) ? j.programs : []).filter(x => x && x.id);
-  ['parts', 'plans', 'inventory'].forEach(k => { j[k] = (Array.isArray(j[k]) ? j[k] : []).filter(x => x && x.id); });
+  ['parts', 'plans', 'inventory', 'vlib'].forEach(k => { j[k] = (Array.isArray(j[k]) ? j[k] : []).filter(x => x && x.id); });
   j.vehicles.forEach(v => { v.fuel = Array.isArray(v.fuel) ? v.fuel : []; v.maint = v.maint || {}; v.specs = (v.specs && typeof v.specs === 'object') ? v.specs : {}; SECTIONS.forEach(s => { v.maint[s.id] = Array.isArray(v.maint[s.id]) ? v.maint[s.id] : []; }); });
   if (!j.vehicles.find(v => v.id === j.settings.current)) j.settings.current = j.vehicles[0]?.id || null;
   return j;
@@ -463,6 +475,8 @@ function save() { DBV++; try { localStorage.setItem(KEY, JSON.stringify(db)); } 
 const cur = () => { const v = db.vehicles.find(x => x.id === db.settings.current) || null; if (v && (!v.specs || typeof v.specs !== 'object')) v.specs = {}; return v; };
 const vname = v => v ? (v.name || [v.year, v.make, v.model].filter(Boolean).join(' ') || 'Vehicle') : 'No vehicle';
 const vdesc = v => [v.year, v.make, v.model, v.trim].filter(Boolean).join(' ');
+// header line: when the trim is an EPA engine option ("Auto (S8), 4 cyl, 2.5 L") the engine summary already says it, so skip the repeat
+const vdescE = v => { const e = engSum(v), base = v.src?.trim === 'EPA' && e ? [v.year, v.make, v.model].filter(Boolean).join(' ') : vdesc(v); return [base, e].filter(Boolean).join(' · '); };
 function curOdo(v) {
   if (!v) return 0;
   let m = num(v.odometer) || 0;
@@ -689,6 +703,24 @@ function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.ad
 const stat = (k, v, u = '') => `<div class="stat"><div class="k">${esc(k)}</div><div class="v">${v}${u ? `<small>${u}</small>` : ''}</div></div>`;
 const pill = st => `<span class="pill ${st.level}">${esc(st.label)}</span>`;
 
+/* iOS / WebKit (Safari, Brave, every iPhone browser): while any sheet or dialog is open, pin the page behind it.
+   Without this, focusing a field or opening a picker inside a sheet scrolls the whole document under the fixed dialog,
+   and when the picker closes the page is left shifted down with no way back to the top. The saved scroll position is
+   restored when the last dialog closes. */
+const scrollLock = (() => {
+  let y = 0, on = false;
+  const lock = () => { if (on) return; on = true; y = window.scrollY || 0; const st = document.body.style;
+    document.documentElement.classList.add('modal-open'); st.position = 'fixed'; st.top = `-${y}px`; st.left = '0'; st.right = '0'; st.width = '100%'; };
+  const unlock = () => { if (!on) return; on = false; const st = document.body.style;
+    document.documentElement.classList.remove('modal-open'); st.position = ''; st.top = ''; st.left = ''; st.right = ''; st.width = '';
+    window.scrollTo(0, y); };
+  const sync = () => { if ([...document.querySelectorAll('dialog')].some(d => d.open)) lock(); else unlock(); };
+  const watch = () => { const mo = new MutationObserver(sync); document.querySelectorAll('dialog').forEach(d => { mo.observe(d, { attributes: true, attributeFilter: ['open'] }); d.addEventListener('close', () => setTimeout(sync, 0)); }); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+  // never leave the page stuck: if no dialog is open, any lock left over is released
+  ['pageshow', 'hashchange', 'orientationchange'].forEach(ev => window.addEventListener(ev, () => setTimeout(sync, 0)));
+  return { sync, isOn: () => on };
+})();
 function ask({ title, msg = '', buttons, typeToConfirm }) {
   return new Promise(res => {
     const d = $('#confirm'), box = $('#confirmInner');
@@ -716,7 +748,7 @@ function fieldHTML(f, vals, pool) {
   if (f.t === 'fit') return `<div class="field fitbox" data-k="${f.k}" data-fit="${f.cat}"></div>`;
   if (f.t === 'pick') return `<div class="field pick" data-k="${f.k}" data-cat="${f.cat}"><span class="lbl">${esc(f.l)}</span><input type="hidden" name="${f.k}" value="${esc(vals[f.k] ? (typeof vals[f.k] === 'string' ? vals[f.k] : JSON.stringify(vals[f.k])) : '')}"><div class="pick-ui"></div></div>`;
   const val = vals[f.k], name = `name="${f.k}"`, cls = `field${f.half ? ' half' : ''}`;
-  const lbl = `<span class="lbl">${esc(f.l)}${f.req ? ' *' : ''}</span>`;
+  const lbl = `<span class="lbl">${esc(f.l)}${f.req ? ' *' : ''}${f.srcTag ? `<em class="srctag" data-src="${f.k}" hidden></em>` : ''}</span>`;
   const hint = f.hint ? `<small class="muted">${esc(f.hint)}</small>` : '';
   const ph = f.ph ? `placeholder="${esc(f.ph)}"` : '';
   let inner = '';
@@ -740,6 +772,8 @@ function fieldHTML(f, vals, pool) {
         return `<div class="rw${r ? ' on' : ''}" data-pid="${pr.id}"><label class="rw-head"><input type="checkbox" name="rw.${pr.id}.on" data-rwon="${pr.id}" ${r ? 'checked' : ''}><span class="rw-check">${I.check}</span><span class="rw-name">${esc(progName(pr))}</span>${lib?.cpg ? `<small>${lib.cpg}¢ base</small>` : lib?.ppg ? `<small>${lib.ppg} pts/gal</small>` : ''}</label>
           <div class="rw-fields"><label><span>¢/gal off</span><input type="number" inputmode="decimal" step="any" name="rw.${pr.id}.cpg" value="${esc(r?.cpg)}"></label><label><span>$ saved</span><input type="number" inputmode="decimal" step="any" name="rw.${pr.id}.saved" value="${esc(r?.saved)}"></label><label><span>Points</span><input type="number" inputmode="decimal" step="any" name="rw.${pr.id}.points" value="${esc(r?.points)}"></label></div></div>`; }).join('')}</div></div>`;
     }
+    case 'combo': return `<div class="${cls} combo-f" data-k="${f.k}">${lbl}<div class="combo"><input type="text" name="${f.k}" value="${esc(val)}" ${ph} autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-label="${esc(f.l)}" data-combo="${f.k}"${f.numeric ? ' inputmode="numeric"' : ''}><button type="button" class="combo-btn" data-combo-open="${f.k}" aria-label="Show ${esc(f.l.toLowerCase())} list" tabindex="-1">${I.chev}</button></div><div class="combo-list" role="listbox" hidden></div>${hint}</div>`;
+    case 'btn': return `<div class="field fillrow" data-k="${f.k}"><button type="button" class="btn small" data-${f.k}>${I.search} ${esc(f.l)}</button>${hint}<div class="vinmsg" id="${f.k}Msg" role="status" aria-live="polite"></div></div>`;
     case 'quad': return `<div class="${cls}" data-k="${f.k}">${lbl}<div class="quad${f.pos && f.pos.length === 2 ? ' two' : ''}">${(f.pos || TIRE_POS).map(([k, l]) => `<label><b>${l}</b><input type="number" inputmode="decimal" name="${f.k}.${k}" step="${f.step || 'any'}" value="${esc(val?.[k])}" aria-label="${esc(f.l)} ${l}"></label>`).join('')}</div>${hint}</div>`;
   }
   return `<label class="${cls}" data-k="${f.k}">${lbl}${inner}${hint}</label>`;
@@ -747,7 +781,7 @@ function fieldHTML(f, vals, pool) {
 function readForm(form, fields) {
   const o = {};
   for (const f of fields) {
-    if (f.t === 'h' || f.t === 'hint' || f.t === 'fit') continue;
+    if (f.t === 'h' || f.t === 'hint' || f.t === 'fit' || f.t === 'btn') continue;
     const el = form.elements[f.k];
     switch (f.t) {
       case 'num': o[f.k] = num(el.value); break;
@@ -757,6 +791,7 @@ function readForm(form, fields) {
       case 'pick': { let x = null; try { x = el.value ? JSON.parse(el.value) : null; } catch (e) { x = null; } o[f.k] = x; break; }
       case 'progs': o[f.k] = db.programs.filter(pr => form.elements[`rw.${pr.id}.on`]?.checked).map(pr => ({ pid: pr.id, name: progName(pr), cpg: num(form.elements[`rw.${pr.id}.cpg`].value), saved: num(form.elements[`rw.${pr.id}.saved`].value), points: num(form.elements[`rw.${pr.id}.points`].value) })); break;
       case 'quad': { const q = {}, P = f.pos || TIRE_POS; P.forEach(([k]) => { q[k] = num(form.elements[`${f.k}.${k}`].value); }); o[f.k] = P.some(([k]) => q[k] != null) ? q : null; break; }
+      case 'combo': o[f.k] = f.numeric ? num(el.value) : (el.value || '').trim(); break;
       default: o[f.k] = (el.value || '').trim();
     }
   }
@@ -818,31 +853,124 @@ function vehOdoLabel(form) {
   $('.lbl', f).textContent = h ? 'Current engine hours' : 'Current odometer'; const em = $('em', f); if (em) em.textContent = h ? 'hrs' : 'mi';
 }
 function addVehicle(existing, opts = {}) {
-  let pending = null;
+  let pending = null, pendFe = null; const src = { ...(existing?.src || {}) };
+  const formVals = form => { const x = readForm(form, VEHICLE_FIELDS); return { type: vtByLabel(x.typeL), year: x.year, make: x.make, model: x.model, selfId: existing?.id }; };
+  const tagPaint = form => $$('.srctag[data-src]', form).forEach(t => { const k = t.dataset.src, v = src[k]; t.hidden = !v; t.textContent = v ? (SRC_LBL[v] || v) : ''; t.className = 'srctag' + (v === 'EPA' ? ' epa' : v === 'NHTSA' ? ' nhtsa' : ''); });
+  const setVal = (form, k, val, tag) => { setField(form, k, val); if (tag) src[k] = tag; $(`[data-k="${k}"]`, form)?.classList.add('autofill'); };
+  const fillMsg = (form, cls, txt) => { const m = $('#vfillMsg', form); if (m) { m.className = 'vinmsg ' + cls; m.textContent = txt; } };
+  // Fill empty fields; ask before replacing anything the user typed. Database-sourced values can be refreshed silently.
+  const applyFill = async (form, fills, tag) => {
+    const set = [], conflicts = [];
+    for (const [k, val] of Object.entries(fills)) { if (val == null || val === '') continue; const el = form.elements[k]; if (!el) continue;
+      const cur = String(el.value ?? '').trim(), same = normS(cur) === normS(val) || (num(cur) != null && num(val) != null && Math.abs(num(cur) - num(val)) < 1e-6);
+      if (!cur) set.push([k, val]); else if (same) { if (!src[k]) src[k] = tag; } else if (src[k] && src[k] !== 'You') set.push([k, val]); else conflicts.push([k, cur, val]); }
+    let replace = false;
+    if (conflicts.length) replace = await ask({ title: `Replace ${plural(conflicts.length, 'value')} you entered?`, msg: `${esc(tag)} has different values:<br>${conflicts.map(([k, a, b]) => `<b>${esc(VFIELD_L(k))}</b>: ${esc(a)} → ${esc(b)}`).join('<br>')}`, buttons: [{ label: 'Replace', value: true, cls: 'primary' }, { label: 'Keep mine', value: false }] });
+    [...set, ...(replace ? conflicts.map(([k, , b]) => [k, b]) : [])].forEach(([k, val]) => setVal(form, k, val, tag));
+    tagPaint(form); form.dispatchEvent(new Event('change', { bubbles: true })); return set.length + (replace ? conflicts.length : 0);
+  };
   const lookup = async form => {
     const msg = $('#vinMsg', form), btn = $('[data-vinlookup]', form);
     const vin = form.elements.vin.value.trim().toUpperCase(); form.elements.vin.value = vin;
     const chk = vinCheck(vin);
-    if (!chk.valid) { msg.className = 'vinmsg bad'; msg.textContent = chk.msg; return; }
+    if (!chk.valid) { msg.className = 'vinmsg bad'; msg.textContent = chk.msg; return 0; }
     msg.className = 'vinmsg muted'; msg.textContent = 'Looking up VIN with NHTSA…'; btn.disabled = true;
     try {
       const r = await decodeVin(vin);
-      const filled = [];
-      Object.entries(r.fields).forEach(([k, val]) => { const el = form.elements[k]; if (el && val) { el.value = val; filled.push(k); $(`[data-k="${k}"]`, form)?.classList.add('autofill'); } });
       pending = r.raw;
-      msg.className = 'vinmsg good';
       const vt = r.raw.vehicleType || '';
-      if (/motorcycle/i.test(vt)) setField(form, 'typeL', 'Motorcycle');
-      vehOdoLabel(form); form.dispatchEvent(new Event('change', { bubbles: true }));
-      msg.textContent = `Filled ${filled.length} fields from NHTSA vPIC. Review and edit them, then tap Save.${vt ? ` NHTSA type: ${titleCase(vt)}.${/off road/i.test(vt) ? ' Pick ATV or UTV above.' : ''}` : ''}${chk.msg ? ' ' + chk.msg : ''}${r.note ? ' NHTSA note: ' + r.note : ''}`;
-    } catch (e) { msg.className = 'vinmsg bad'; msg.textContent = netMsg(e); }
+      if (/motorcycle/i.test(vt) && vtByLabel(($('input[name="typeL"]:checked', form) || {}).value) === 'car') setField(form, 'typeL', 'Motorcycle');
+      vehOdoLabel(form);
+      const n = await applyFill(form, r.fields, 'NHTSA');
+      msg.className = 'vinmsg good';
+      msg.textContent = `Filled ${plural(n, 'field')} from NHTSA vPIC. Review and edit them, then tap Save.${vt ? ` NHTSA type: ${titleCase(vt)}.${/off.road/i.test(vt) ? ' Pick ATV or UTV above.' : ''}` : ''}${chk.msg ? ' ' + chk.msg : ''}${r.note ? ' NHTSA note: ' + r.note : ''}`;
+      return n;
+    } catch (e) { msg.className = 'vinmsg bad'; msg.textContent = netMsg(e); return 0; }
     finally { btn.disabled = false; }
   };
+  const fillFromFe = async (form, id, tag = 'EPA') => {
+    try { const d = await feVeh(id); if (!d) return 0; pendFe = id;
+      return await applyFill(form, { engDispL: d.displ || '', engCyl: d.cyl || '', engAsp: d.turbo && d.sc ? 'Turbo + supercharged' : d.turbo ? 'Turbo' : d.sc ? 'Supercharged' : d.displ ? 'Naturally aspirated' : '', fuelType: d.fuel, transmission: d.trany, drive: d.drive, engine: [d.displ && `${fmt2(d.displ)} L`, d.cyl && `${d.cyl} cyl`, d.dscr].filter(Boolean).join(' · ') }, tag);
+    } catch (e) { fillMsg(form, 'bad', netMsg(e)); return 0; }
+  };
+  const C = { form: null, open: null, idx: -1, data: {}, key: {}, timer: null };
+  const comboList = k => $(`[data-k="${k}"] .combo-list`, C.form);
+  const loadOpts = async k => { const x = formVals(C.form), key = JSON.stringify([k, x.type, k === 'year' ? '' : x.year, k === 'make' || k === 'year' ? '' : x.make, k === 'trim' ? x.model : '']);
+    if (C.key[k] === key && C.data[k]) return C.data[k];
+    C.key[k] = key; C.data[k] = { loading: true, opts: [] }; if (C.open === k) paintList(k);
+    const r = await vlOptions(k, x); if (C.key[k] === key) C.data[k] = r; return r; };
+  const paintList = k => {
+    const box = comboList(k), inp = C.form.elements[k]; if (!box) return;
+    const q = (inp.value || '').trim(), qn = normS(q), d = C.data[k] || { opts: [] };
+    let list = d.opts.filter(o => !qn || normS(o.v).includes(qn) || o.v.toLowerCase().includes(q.toLowerCase()));
+    if (!qn) list = list.filter(o => o.tier === 1);
+    list.sort((a, b) => (qn ? (normS(b.v).startsWith(qn) - normS(a.v).startsWith(qn)) : 0));
+    const more = Math.max(0, list.length - 80), hidden = !qn ? d.opts.filter(o => o.tier !== 1).length : 0; list = list.slice(0, 80);
+    const exact = d.opts.some(o => normS(o.v) === qn);
+    C.rows = [...(q && !exact ? [{ own: true, v: q }] : []), ...list];
+    box.innerHTML = `${d.loading ? '<div class="combo-note">Loading…</div>' : ''}${C.rows.map((o, i) => `<div class="combo-opt${i === C.idx ? ' on' : ''}${o.own ? ' own' : ''}" role="option" data-copt="${i}" aria-selected="${i === C.idx}">${o.own ? `<span class="ot">Use “<b>${esc(o.v)}</b>”</span><span class="otag">my own</span>` : `<span class="ot">${esc(o.v)}</span>${o.tag ? `<span class="otag ${o.tag.toLowerCase()}">${esc(o.tag)}</span>` : ''}`}</div>`).join('')}
+      ${more ? `<div class="combo-note">${fmt(more)} more. Keep typing to narrow.</div>` : hidden ? `<div class="combo-note">Type to search ${fmt(hidden)} more from NHTSA.</div>` : ''}${d.note ? `<div class="combo-note">${esc(d.note)}</div>` : ''}
+      ${!q ? `<div class="combo-opt own" role="option" data-cother>Other / type my own</div>` : ''}`;
+    box.hidden = false; inp.setAttribute('aria-expanded', 'true');
+    const fr = box.parentElement.getBoundingClientRect(), wr = C.form.getBoundingClientRect(); box.classList.toggle('right', fr.left - wr.left > wr.width / 3);
+    const sb = box.closest('.sheet-body'); if (sb) { const lr = box.getBoundingClientRect(), br = sb.getBoundingClientRect(); if (lr.bottom > br.bottom) sb.scrollTop += Math.min(lr.bottom - br.bottom + 8, box.parentElement.getBoundingClientRect().top - br.top - 8); }
+  };
+  const openCombo = async k => { if (C.open && C.open !== k) closeCombo(); C.open = k; C.idx = -1; paintList(k); await loadOpts(k); if (C.open === k) paintList(k); };
+  const closeCombo = () => { if (!C.open) return; const b = comboList(C.open); if (b) b.hidden = true; C.form.elements[C.open]?.setAttribute('aria-expanded', 'false'); C.open = null; };
+  const DOWN = { year: ['model', 'trim'], make: ['model', 'trim'], model: ['trim'] };
+  const pick = async (k, o) => {
+    const inp = C.form.elements[k], prev = inp.value; inp.value = o.v; src[k] = o.own ? 'You' : o.tag === 'Mine' ? 'You' : (o.tag || 'You'); closeCombo();
+    if (normS(prev) !== normS(o.v)) (DOWN[k] || []).forEach(d => { if (src[d] === 'EPA' || src[d] === 'NHTSA') { C.form.elements[d].value = ''; delete src[d]; } C.data[d] = null; C.key[d] = null; });
+    tagPaint(C.form); C.form.dispatchEvent(new Event('change', { bubbles: true }));
+    if (k === 'trim' && o.data?.feId) { fillMsg(C.form, 'muted', 'Getting engine details from EPA…'); const n = await fillFromFe(C.form, o.data.feId); fillMsg(C.form, 'good', `Filled ${plural(n, 'engine detail')} from EPA fueleconomy.gov. Review and edit, then tap Save.`); }
+    else if (k === 'trim' && o.data?.eng) await applyFill(C.form, o.data.eng, 'You');
+    const next = { year: 'make', make: 'model', model: 'trim' }[k]; if (next && !o.own) setTimeout(() => { const n = C.form.elements[next]; if (n && !n.value) { n.focus({ preventScroll: true }); } }, 30);
+  };
+  const vfill = async form => {
+    const x = formVals(form), vin = (form.elements.vin?.value || '').trim(); let n = 0;
+    if (vin.length === 17 && vinCheck(vin.toUpperCase()).valid && x.type !== 'boat') n += await lookup(form);
+    const y = formVals(form);
+    if (y.type === 'car' && y.year && y.make && y.model) {
+      fillMsg(form, 'muted', 'Checking EPA fueleconomy.gov…');
+      let o = []; try { o = await feOpts(y.year, y.make, y.model); } catch (e) { fillMsg(form, 'bad', netMsg(e)); return; }
+      const cur = (form.elements.trim.value || '').trim(), match = o.find(op => normS(op.text) === normS(cur)) || (o.length === 1 ? o[0] : null);
+      if (match) { if (!cur) { form.elements.trim.value = match.text; src.trim = 'EPA'; } n += await fillFromFe(form, match.id); fillMsg(form, 'good', `Filled ${plural(n, 'detail')} from ${vin ? 'NHTSA and ' : ''}EPA. Review, then tap Save.`); }
+      else if (o.length) { fillMsg(form, 'muted', `EPA lists ${o.length} engine versions. Pick yours under Trim / engine.`); form.elements.trim.focus(); openCombo('trim'); }
+      else fillMsg(form, n ? 'good' : 'muted', n ? `Filled ${plural(n, 'detail')} from NHTSA.` : 'EPA has no match for this year, make and model. Check the spelling, look up the VIN, or type the details yourself.');
+    } else if (y.type === 'boat') fillMsg(form, 'muted', 'There’s no free boat database. Type the engine details in. They’re saved to your list for next time.');
+    else if (!n) fillMsg(form, 'muted', y.type === 'car' ? 'Enter year, make and model first.' : 'NHTSA only has engine details for these through a VIN. Enter the 17-character VIN above, or type the engine details yourself.');
+    tagPaint(form);
+  };
   openForm({
-    title: existing ? 'Edit vehicle' : 'Add vehicle', fields: VEHICLE_FIELDS, values: existing ? { ...existing, typeL: VT(existing).l, meterL: existing.meter === 'hr' ? 'Hours' : 'Miles' } : { typeL: VTYPES[opts.type || 'car'].l }, saveLabel: existing ? 'Save' : 'Add vehicle',
-    onReady: form => vehOdoLabel(form),
-    onInput: (e, form) => { if (e.target.name === 'typeL' || e.target.name === 'meterL') vehOdoLabel(form); if (e.target.name === 'vin') { const v = e.target.value.trim().toUpperCase(); const msg = $('#vinMsg', form); if (v.length === 17) { const c = vinCheck(v); msg.className = 'vinmsg ' + (c.valid && !c.msg ? 'good' : 'bad'); msg.textContent = c.valid ? (c.msg || 'VIN looks valid (check digit OK). Tap Look up.') : c.msg; } else { msg.className = 'vinmsg muted'; msg.textContent = `${v.length}/17 characters`; } } },
-    onClick: (e, form) => { if (e.target.closest('[data-vinlookup]')) { e.preventDefault(); lookup(form); } },
+    title: existing ? 'Edit vehicle' : 'Add vehicle', fields: VEHICLE_FIELDS, values: existing ? { ...existing, typeL: VT(existing).l, meterL: existing.meter === 'hr' ? 'Hours' : 'Miles', engDispL: existing.engDispL ?? '', engCyl: existing.engCyl ?? '' } : { typeL: VTYPES[opts.type || 'car'].l }, saveLabel: existing ? 'Save' : 'Add vehicle',
+    onReady: form => {
+      C.form = form; vehOdoLabel(form); tagPaint(form);
+      form.addEventListener('focusin', e => { const k = e.target.dataset?.combo; if (k) openCombo(k); });
+      form.addEventListener('focusout', e => { if (e.target.dataset?.combo) setTimeout(() => { if (!form.contains(document.activeElement) || !document.activeElement.dataset?.combo) closeCombo(); }, 180); });
+      form.addEventListener('pointerdown', e => { if (e.target.closest('.combo-list')) e.preventDefault(); });
+      form.addEventListener('keydown', e => { const k = e.target.dataset?.combo; if (!k) return;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (C.open !== k) { openCombo(k); return; } C.idx = Math.max(-1, Math.min((C.rows || []).length - 1, C.idx + (e.key === 'ArrowDown' ? 1 : -1))); paintList(k); }
+        else if (e.key === 'Enter') { e.preventDefault(); const o = (C.rows || [])[C.idx] || (C.rows || []).find(r => normS(r.v) === normS(e.target.value)) || (e.target.value.trim() ? { own: true, v: e.target.value.trim() } : null); if (o) pick(k, o); else closeCombo(); }
+        else if (e.key === 'Escape' && C.open) { e.preventDefault(); e.stopPropagation(); closeCombo(); } });
+    },
+    onInput: (e, form) => {
+      const nm = e.target.name;
+      if (nm === 'typeL') { Object.keys(C.data).forEach(k => { C.data[k] = null; C.key[k] = null; }); }
+      if (nm === 'typeL' || nm === 'meterL') vehOdoLabel(form);
+      if (e.target.dataset?.combo) { src[nm] = 'You'; C.idx = -1; if (C.open !== nm) openCombo(nm); else paintList(nm); (DOWN[nm] || []).forEach(d => { C.data[d] = null; C.key[d] = null; });
+        clearTimeout(C.timer); C.timer = setTimeout(() => { const nx = { year: 'make', make: 'model', model: 'trim' }[nm]; if (nx) loadOpts(nx).catch(() => {}); }, 450); }
+      else if (VEHICLE_FIELDS.some(f => f.k === nm && f.srcTag)) src[nm] = 'You';
+      if (nm === 'engDispL' && !form.elements.engCc.value) { /* L and cc are kept separately: no made-up conversion */ }
+      tagPaint(form);
+      if (nm === 'vin') { const v = e.target.value.trim().toUpperCase(); const msg = $('#vinMsg', form); if (v.length === 17) { const c = vinCheck(v); msg.className = 'vinmsg ' + (c.valid && !c.msg ? 'good' : 'bad'); msg.textContent = c.valid ? (c.msg || 'VIN looks valid (check digit OK). Tap Look up to fill details.') : c.msg; } else { msg.className = 'vinmsg muted'; msg.textContent = v.length ? `${v.length} of 17 characters` : 'Enter the 17-character VIN (windshield corner or driver’s door jamb) to auto-fill details from NHTSA.'; } }
+    },
+    onClick: (e, form) => {
+      if (e.target.closest('[data-vinlookup]')) { e.preventDefault(); lookup(form); }
+      if (e.target.closest('[data-vfill]')) { e.preventDefault(); vfill(form); }
+      const ob = e.target.closest('[data-combo-open]'); if (ob) { e.preventDefault(); const k = ob.dataset.comboOpen; if (C.open === k) closeCombo(); else { form.elements[k].focus(); openCombo(k); } }
+      const co = e.target.closest('[data-copt]'); if (co && C.open) { e.preventDefault(); const o = C.rows[+co.dataset.copt]; if (o) pick(C.open, o); }
+      if (e.target.closest('[data-cother]') && C.open) { e.preventDefault(); const k = C.open; closeCombo(); src[k] = 'You'; tagPaint(form); const i = form.elements[k]; i.value = ''; i.placeholder = 'Type your own'; i.focus(); setTimeout(closeCombo, 0); }
+    },
     onSave: vals => {
       const typ = vtByLabel(vals.typeL); vals.type = typ; vals.meter = typ === 'boat' ? 'hr' : (typ === 'atv' || typ === 'utv') && vals.meterL === 'Hours' ? 'hr' : 'mi';
       if (typ !== 'moto') delete vals.cooling;
@@ -851,12 +979,21 @@ function addVehicle(existing, opts = {}) {
       if ('vin' in vals) vals.vin = (vals.vin || '').toUpperCase();
       if (vals.vin && !vinCheck(vals.vin).valid) { toast('That VIN doesn’t look right. Fix it or clear it to save.'); return false; }
       if (pending) vals.vpic = pending;
+      if (pendFe) vals.feId = pendFe;
+      // keep source tags only for fields that still have a value
+      const s2 = {}; Object.entries(src).forEach(([k, t]) => { if (vals[k] != null && vals[k] !== '') s2[k] = t; }); vals.src = s2;
+      // remember custom make/model/engine for next time (synced, account-wide)
+      if (vals.make && (s2.make === 'You' || s2.model === 'You' || s2.trim === 'You' || s2.engMake === 'You')) {
+        db.vlib = db.vlib || []; const key = [typ, vals.make, vals.model, vals.trim].map(normS).join('|');
+        if (!db.vlib.some(r => [r.type, r.make, r.model, r.trim].map(normS).join('|') === key)) db.vlib.push({ id: 'vl' + uid(), type: typ, year: vals.year || null, make: vals.make, model: vals.model || '', trim: vals.trim || '', engMake: vals.engMake || '', eng: { engDispL: vals.engDispL, engCc: vals.engCc, engCyl: vals.engCyl, engConfig: vals.engConfig, engAsp: vals.engAsp, engHp: vals.engHp, fuelType: vals.fuelType }, created: todayISO() });
+      }
       if (existing) Object.assign(existing, vals);
       else { const v = { id: uid(), created: todayISO(), ...vals, fuel: [], maint: {}, specs: {} }; SECTIONS.forEach(s => { v.maint[s.id] = []; }); db.vehicles.push(v); db.settings.current = v.id; toast('Vehicle added'); }
     },
   });
   if (opts.autoLookup && existing?.vin) lookup($('#sheetForm'));
   else if (opts.autoLookup) setTimeout(() => $('#sheetForm input[name="vin"]')?.focus(), 50);
+  else if (opts.fill) setTimeout(() => vfill($('#sheetForm')), 50);
 }
 function fuelForm(v, entry) {
   const last = [...v.fuel].sort(byNewest)[0];
@@ -965,7 +1102,7 @@ async function importJSON(file) {
   if (!ch) return;
   const inc = normalize(JSON.parse(JSON.stringify(j)));
   if (ch === 'replace') db = inc;
-  else { inc.vehicles.forEach(v => { if (!db.vehicles.find(x => x.id === v.id)) db.vehicles.push(v); }); inc.programs.forEach(pr => { if (!progById(pr.id)) db.programs.push(pr); }); ['parts', 'plans', 'inventory'].forEach(k => inc[k].forEach(x => { if (!db[k].some(y => y.id === x.id)) db[k].push(x); })); }
+  else { inc.vehicles.forEach(v => { if (!db.vehicles.find(x => x.id === v.id)) db.vehicles.push(v); }); inc.programs.forEach(pr => { if (!progById(pr.id)) db.programs.push(pr); }); ['parts', 'plans', 'inventory', 'vlib'].forEach(k => inc[k].forEach(x => { if (!db[k].some(y => y.id === x.id)) db[k].push(x); })); }
   db = normalize(db);
   save(); applyTheme(); render(); toast('Backup imported');
 }
@@ -1169,7 +1306,7 @@ function viewSection(v, sec) {
 }
 let garageFilter = 'all';
 function garageCard(x, v) {
-  return `<section class="card"><div class="vcard"><span class="sicon c-vt-${vtype(x)}" title="${esc(VT(x).l)}">${VT(x).icon}</span><div class="vinfo"><b>${esc(vname(x))}</b><small>${esc(VT(x).l)} · ${esc(vdesc(x))} · ${fmtO(curOdo(x), x)} ${UM(x)} · ${plural(x.fuel.length, 'fill-up')}</small></div>${x === v ? '<span class="current-badge">Current</span>' : ''}</div>
+  return `<section class="card"><div class="vcard"><span class="sicon c-vt-${vtype(x)}" title="${esc(VT(x).l)}">${VT(x).icon}</span><div class="vinfo"><b>${esc(vname(x))}</b><small>${esc(VT(x).l)} · ${esc(vdescE(x))} · ${fmtO(curOdo(x), x)} ${UM(x)} · ${plural(x.fuel.length, 'fill-up')}</small></div>${x === v ? '<span class="current-badge">Current</span>' : ''}</div>
       <div class="vactions">${x !== v ? `<button class="btn small primary" data-act="select" data-id="${x.id}">Select</button>` : ''}<button class="btn small" data-act="editVehicle" data-id="${x.id}">${I.edit} Edit</button><button class="btn small" data-act="specsFor" data-id="${x.id}">${I.car} Specs</button><button class="btn small" data-act="resetFuelV" data-id="${x.id}" ${x.fuel.length ? '' : 'disabled'}>${I.reset} Reset fuel</button><button class="btn small ghost-danger" data-act="eraseVehicle" data-id="${x.id}">${I.trash} Erase</button></div></section>`;
 }
 function garageList(v) {
@@ -1196,7 +1333,7 @@ function viewGarage() {
     </section>${rzFoot()}`;
 }
 /* ---------- RIZNOSS branding ---------- */
-const APP_VERSION = '9';
+const APP_VERSION = '10';
 const rzFoot = () => `<a href="#/about" class="rz-foot"><img src="img/riznoss-crest-solid.webp" alt="" width="26" height="30" loading="lazy" decoding="async"><b>RIZNOSS · Chamber 01</b><span>AutoLog v${APP_VERSION} · works offline · your data stays yours</span><i>Protect ya data.</i></a>`;
 function viewAbout() {
   const n = db.vehicles.length, recs = db.vehicles.reduce((t, v) => t + v.fuel.length + SECTIONS.reduce((u, sc) => u + (v.maint[sc.id] || []).length, 0), 0);
@@ -1335,7 +1472,7 @@ const netMsg = e => e.message === 'offline' ? 'You’re offline. Connect to the 
   : e.message === 'timeout' ? 'The lookup timed out. Try again in a moment, or type the details in yourself.'
   : e.message === 'network' ? 'Couldn’t reach the lookup service. Check your connection, or type the details in yourself.'
   : `Lookup didn’t work (${e.message}). You can still type the details in yourself.`;
-const UPPER_MAKES = ['BMW', 'GMC', 'MINI', 'FIAT', 'RAM', 'KIA', 'BYD', 'VPG', 'AM'];
+const UPPER_MAKES = ['BMW', 'GMC', 'MINI', 'FIAT', 'RAM', 'KIA', 'BYD', 'VPG', 'AM', 'KTM', 'BRP', 'JLG', 'MV', 'AJP', 'SSR', 'TGB', 'CPI', 'BSA', 'AGV', 'CF', 'RZR', 'GEM', 'UTV', 'ATV', 'SUV', 'XP', 'XT', 'GT', 'TT', 'LSV'];
 const titleCase = s => !s ? '' : String(s).toLowerCase().replace(/(^|[\s-])([a-z])/g, (m, a, b) => a + b.toUpperCase()).split(' ').map(w => UPPER_MAKES.includes(w.toUpperCase()) && w.length <= 4 ? w.toUpperCase() : w).join(' ');
 async function decodeVin(vin) {
   const j = await fetchJSON(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended/${encodeURIComponent(vin)}?format=json`);
@@ -1346,7 +1483,10 @@ async function decodeVin(vin) {
   const engine = [displ ? `${displ.toFixed(1)} L` : '', g('EngineCylinders') ? `${g('EngineCylinders')} cyl` : '', g('EngineConfiguration'), /yes/i.test(g('Turbo')) ? 'Turbo' : '', g('EngineModel')].filter(Boolean).join(' · ');
   const trans = [g('TransmissionStyle'), g('TransmissionSpeeds') ? `${g('TransmissionSpeeds')}-speed` : ''].filter(Boolean).join(', ');
   const fuel = [g('FuelTypePrimary'), g('FuelTypeSecondary') ? `/ ${g('FuelTypeSecondary')}` : '', g('ElectrificationLevel')].filter(Boolean).join(' ');
-  const fields = { year: g('ModelYear'), make: titleCase(g('Make')), model: g('Model'), trim: [g('Trim'), g('Series')].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join(' '), engine, fuelType: fuel, drive: g('DriveType'), body: g('BodyClass'), transmission: trans };
+  const cylN = num(g('EngineCylinders')), cfgRaw = g('EngineConfiguration'), ccN = num(g('DisplacementCC')), hpN = num(g('EngineHP'));
+  const engConfig = !cfgRaw ? '' : /v-shaped/i.test(cfgRaw) ? (cylN === 2 ? 'V-twin' : cylN ? `V${cylN}` : '') : /in-line|inline/i.test(cfgRaw) ? (cylN === 1 ? 'Single' : cylN === 2 ? 'Parallel twin' : cylN ? `Inline-${cylN}` : '') : /opposed|boxer/i.test(cfgRaw) ? (cylN === 2 ? 'Flat-twin (boxer)' : cylN ? `Flat-${cylN}` : '') : /rotary/i.test(cfgRaw) ? 'Rotary' : /w-shaped/i.test(cfgRaw) && cylN ? `W${cylN}` : '';
+  const engF = { engDispL: displ ? Math.round(displ * 10) / 10 : '', engCc: ccN ? Math.round(ccN) : '', engCyl: cylN || '', engConfig, engAsp: /yes/i.test(g('Turbo')) ? 'Turbo' : '', engHp: hpN ? Math.round(hpN) : '' };
+  const fields = { ...engF, year: g('ModelYear'), make: titleCase(g('Make')), model: g('Model'), trim: [g('Trim'), g('Series')].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join(' '), engine, fuelType: fuel, drive: g('DriveType'), body: g('BodyClass'), transmission: trans };
   const raw = { checked: todayISO(), vehicleType: g('VehicleType'), displ, cylinders: num(g('EngineCylinders')), engineModel: g('EngineModel'), turbo: /yes/i.test(g('Turbo')), fuelPrimary: g('FuelTypePrimary'), plant: [g('PlantCity'), g('PlantCountry')].filter(Boolean).join(', '), gvwr: g('GVWR'), doors: g('Doors'), errorCode: g('ErrorCode') };
   const code = String(d.ErrorCode || '0');
   const note = code !== '0' && d.ErrorText ? d.ErrorText.replace(/^\d+ - /, '').split(';')[0] : '';
@@ -1357,6 +1497,77 @@ async function decodeVin(vin) {
 const FE = 'https://www.fueleconomy.gov/ws/rest/vehicle';
 const menu = j => { const m = j?.menuItem; return !m ? [] : Array.isArray(m) ? m : [m]; };
 const normS = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+/* ---------- v10: vehicle pickers (NHTSA vPIC + EPA fueleconomy.gov), cached ---------- */
+const VP = 'https://vpic.nhtsa.dot.gov/api/vehicles', VL_PFX = 'autolog:vl:', VL_TTL = 30 * 864e5;
+const vlMem = new Map();
+function vlPrune(hard) { try { const now = Date.now(); Object.keys(localStorage).filter(k => k.startsWith(VL_PFX)).forEach(k => { try { const c = JSON.parse(localStorage.getItem(k)); if (hard || !c || now - c.t > (c.ttl || VL_TTL)) localStorage.removeItem(k); } catch (e) { localStorage.removeItem(k); } }); } catch (e) { /* ignore */ } }
+async function vlGet(key, url, map, ttl = VL_TTL) {
+  if (vlMem.has(key)) return vlMem.get(key);
+  let c = null; try { c = JSON.parse(localStorage.getItem(VL_PFX + key) || 'null'); } catch (e) { c = null; }
+  if (c && Date.now() - c.t < ttl) { vlMem.set(key, c.d); return c.d; }
+  const pr = fetchJSON(url).then(j => { const d = map(j); vlMem.set(key, d); const rec = JSON.stringify({ t: Date.now(), ttl, d }); try { localStorage.setItem(VL_PFX + key, rec); } catch (e) { vlPrune(true); try { localStorage.setItem(VL_PFX + key, rec); } catch (e2) { /* memory only */ } } return d; })
+    .catch(e => { vlMem.delete(key); if (c) return c.d; throw e; }); // stale cache beats nothing when offline
+  vlMem.set(key, pr); return pr;
+}
+const VPT = { car: ['passenger car', 'multipurpose passenger vehicle (mpv)', 'truck'], moto: ['motorcycle'], atv: ['off-road vehicle', 'motorcycle'], utv: ['off-road vehicle', 'motorcycle', 'low speed vehicle (lsv)'] };
+const vpMakes = t => vlGet('mk:' + t, `${VP}/GetMakesForVehicleType/${encodeURIComponent(t)}?format=json`, j => [...new Set((j?.Results || []).map(r => (r.MakeName || '').trim()).filter(Boolean))]);
+const vpModels = (mk, y, t) => vlGet(`md:${t}:${normS(mk)}:${y}`, `${VP}/GetModelsForMakeYear/make/${encodeURIComponent(mk)}/modelyear/${y}/vehicletype/${encodeURIComponent(t)}?format=json`, j => [...new Set((j?.Results || []).map(r => String(r.Model_Name || '').trim()).filter(Boolean))]);
+const feMakes = y => vlGet('fe:mk:' + y, `${FE}/menu/make?year=${y}`, j => menu(j).map(m => m.value));
+const feModels = (y, mk) => vlGet(`fe:md:${y}:${normS(mk)}`, `${FE}/menu/model?year=${y}&make=${encodeURIComponent(mk)}`, j => menu(j).map(m => m.value));
+const feOpts = (y, mk, md) => vlGet(`fe:op:${y}:${normS(mk)}:${normS(md)}`, `${FE}/menu/options?year=${y}&make=${encodeURIComponent(mk)}&model=${encodeURIComponent(md)}`, j => menu(j).map(m => ({ id: m.value, text: m.text })));
+const feVeh = id => vlGet('fe:v:' + id, `${FE}/${encodeURIComponent(id)}`, j => j ? { id: j.id, displ: num(j.displ), cyl: num(j.cylinders), trany: j.trany || '', drive: j.drive || '', fuel: j.fuelType1 || j.fuelType || '', turbo: j.tCharger === 'T' || j.tCharger === true, sc: j.sCharger === 'S', dscr: j.eng_dscr || '', atv: j.atvType || '' } : null, 180 * 864e5);
+// Ordering only: common makes float to the top when they exist in NHTSA's list (nothing is added that NHTSA doesn't list).
+const POP_MAKES = { moto: ['Harley-Davidson', 'Honda', 'Yamaha', 'Kawasaki', 'Suzuki', 'BMW', 'Ducati', 'Triumph', 'KTM', 'Indian', 'Royal Enfield', 'Aprilia', 'Husqvarna', 'Moto Guzzi', 'Can-Am', 'Zero', 'Victory', 'Polaris'], off: ['Polaris', 'Can-Am', 'Yamaha', 'Honda', 'Kawasaki', 'Suzuki', 'Arctic Cat', 'Textron', 'CFMoto', 'Kubota', 'John Deere', 'Hisun', 'Segway', 'Kymco', 'Massimo', 'Tracker', 'Bobcat', 'Club Car', 'Cub Cadet', 'Intimidator', 'Coleman', 'Argo'] };
+function vlMine(k, x) {
+  const t = x.type, mk = normS(x.make), md = normS(x.model), out = [];
+  const src = [...(db.vlib || []), ...db.vehicles.filter(v => v.id !== x.selfId).map(v => ({ type: vtype(v), make: v.make, model: v.model, trim: v.trim, engMake: v.engMake, eng: { engDispL: v.engDispL, engCc: v.engCc, engCyl: v.engCyl, engConfig: v.engConfig, engAsp: v.engAsp, engHp: v.engHp, fuelType: v.fuelType } }))];
+  src.forEach(r => { if ((r.type || 'car') !== t) return;
+    if (k === 'make' && r.make) out.push({ v: r.make });
+    if (k === 'model' && r.model && normS(r.make) === mk) out.push({ v: r.model });
+    if (k === 'trim' && r.trim && normS(r.make) === mk && normS(r.model) === md) out.push({ v: r.trim, data: { eng: r.eng } });
+    if (k === 'engMake' && r.engMake) out.push({ v: r.engMake }); });
+  return out;
+}
+async function vlOptions(k, x) {
+  const t = x.type, y = num(x.year), mk = (x.make || '').trim(), md = (x.model || '').trim(), out = [], seen = new Set(); let err = null, note = '';
+  const add = (v, tag, tier = 1, data) => { const n = normS(v); if (!v || !n || seen.has(n)) return; seen.add(n); out.push({ v: String(v), tag, tier, data }); };
+  const tryA = async fn => { try { return await fn(); } catch (e) { err = err || e; return []; } };
+  vlMine(k, x).forEach(m => add(m.v, 'Mine', 1, m.data));
+  if (k === 'year') { const now = new Date().getFullYear() + 1; for (let yy = now; yy >= 1950; yy--) add(String(yy), '', 1); }
+  else if (k === 'engConfig') ENG_CONFIGS.forEach(c => add(c, '', 1));
+  else if (k === 'fuelType') FUELS.forEach(c => add(c, '', 1));
+  else if (k === 'make') {
+    if (t === 'car') { if (y) (await tryA(() => feMakes(y))).forEach(m => add(m, 'EPA', 1)); for (const vt of VPT.car) (await tryA(() => vpMakes(vt))).forEach(m => add(titleCase(m), 'NHTSA', 2)); }
+    else if (t === 'boat') note = 'There’s no free boat database, so type the builder. It’s saved to your list for next time.';
+    else { const lists = []; for (const vt of VPT[t]) lists.push([vt, await tryA(() => vpMakes(vt))]);
+      const all = lists.flatMap(([vt, l]) => l.map(m => ({ m, off: vt !== 'motorcycle' }))), has = n => all.find(a => normS(a.m) === normS(n));
+      (t === 'moto' ? POP_MAKES.moto : POP_MAKES.off).forEach(n => { const h = has(n); if (h) add(titleCase(h.m), 'NHTSA', 1); });
+      if (t !== 'moto') all.filter(a => a.off).forEach(a => add(titleCase(a.m), 'NHTSA', 1));
+      all.forEach(a => add(titleCase(a.m), 'NHTSA', 2)); }
+  } else if (k === 'model') {
+    if (!mk) note = 'Pick a make first.'; else if (!y && t !== 'boat') note = 'Pick a year first.';
+    else if (t === 'car') { (await tryA(() => feModels(y, mk))).forEach(m => add(m, 'EPA', 1)); for (const vt of VPT.car) (await tryA(() => vpModels(mk, y, vt))).forEach(m => add(m, 'NHTSA', 1)); }
+    else if (t === 'boat') note = 'Type the model. It’s saved to your list for next time.';
+    else for (const vt of VPT[t]) (await tryA(() => vpModels(mk, y, vt))).forEach(m => add(m, 'NHTSA', 1));
+  } else if (k === 'trim') {
+    if (t === 'car' && y && mk && md) { const o = await tryA(() => feOpts(y, mk, md)); o.forEach(op => add(op.text, 'EPA', 1, { feId: op.id })); if (!o.length && !err) note = 'EPA has no engine list for this model. Look up the VIN or type your own.'; }
+    else if (t !== 'car') note = 'NHTSA has no engine list for this type. Look up the VIN for engine details, or type your own.';
+  } else if (k === 'engMake') note = 'No free engine-maker list for boats. Type it in once and it’s saved for next time.';
+  const off = navigator.onLine === false || (err && err.message === 'offline');
+  if (err && !out.some(o => o.tag && o.tag !== 'Mine')) note = (off ? 'Offline. ' : 'Couldn’t load the list. ') + 'Type your own, it works the same.';
+  else if (err) note = (off ? 'Offline: showing saved lists only. ' : 'Part of the list didn’t load. ') + 'Type your own if yours is missing.';
+  return { opts: out, note };
+}
+function engSum(v) {
+  const t = vtype(v), L = num(v.engDispL) ?? (num(v.vpic?.displ) ? Math.round(v.vpic.displ * 10) / 10 : null), cc = num(v.engCc), cyl = num(v.engCyl) ?? num(v.vpic?.cylinders);
+  const disp = t === 'car' || t === 'boat' ? (L ? `${fmt2(L)} L` : cc ? `${fmt(cc)} cc` : '') : (cc ? `${fmt(cc)} cc` : L ? `${fmt2(L)} L` : '');
+  const cfgHasCyl = v.engConfig && /\d|single|twin|triple/i.test(v.engConfig);
+  const parts = [disp, v.engConfig, !cfgHasCyl && cyl && `${cyl} cyl`, v.engAsp && v.engAsp !== 'Naturally aspirated' && v.engAsp, num(v.engHp) && `${fmt(num(v.engHp))} hp`, t === 'boat' && [v.engMake, v.engModel].filter(Boolean).join(' ')].filter(Boolean);
+  return parts.length ? parts.join(' · ') : (v.engine || '');
+}
+const SRC_LBL = { EPA: 'EPA', NHTSA: 'NHTSA', You: 'You', Mine: 'You' };
+const srcTag = (v, k) => v.src && v.src[k] ? `<span class="srctag on">${esc(SRC_LBL[v.src[k]] || v.src[k])}</span>` : '';
+
 function bestModel(models, model) {
   const t = normS(model); let best = null, bs = -1;
   models.forEach(m => { const c = normS(m.value); let sc = c === t ? 1000 : c.startsWith(t) ? 500 - (c.length - t.length) : t.startsWith(c) ? 300 - (t.length - c.length) : c.includes(t) ? 100 : 0; if (/hybrid|plug|fcv|electric|awd|4wd/.test(c) && !/hybrid|plug|fcv|electric|awd|4wd/.test(t)) sc -= 40; if (sc > bs) { bs = sc; best = m; } });
@@ -2383,7 +2594,7 @@ function viewDash(v) {
   const saved = all ? sum(vs, x => fuelStats(x).totalSaved) : s.totalSaved;
   const sts = secsFor(v).map(sec => ({ sec, st: sectionStatus(sec, v) })), over = sts.filter(x => x.st.level === 'over').length, soon = sts.filter(x => x.st.level === 'soon').length;
   return `${banner}<section class="tco-hero">
-      <div class="tco-top"><div><div class="eyebrow">${all ? `All ${db.vehicles.length} vehicles` : esc(vdesc(v) || 'Vehicle')}</div><h2>${all ? 'Your fleet' : esc(vname(v))}</h2></div>
+      <div class="tco-top"><div><div class="eyebrow">${all ? `All ${db.vehicles.length} vehicles` : esc(vdescE(v) || 'Vehicle')}</div><h2>${all ? 'Your fleet' : esc(vname(v))}</h2></div>
         ${db.vehicles.length > 1 ? `<div class="seg tiny" role="radiogroup" aria-label="Scope"><label><input type="radio" name="dscope" value="one" data-act="dashScope" ${!all ? 'checked' : ''}><span>This</span></label><label><input type="radio" name="dscope" value="all" data-act="dashScope" ${all ? 'checked' : ''}><span>All</span></label></div>` : `<button class="chip-btn" data-act="odo" aria-label="Update ${isHrs(v) ? 'engine hours' : 'odometer'}">${I.gauge} ${fmtO(curOdo(v), v)} ${UM(v)}</button>`}</div>
       <div class="tco-label">Total cost of ownership${t.first ? ` since ${fdate(t.first)}` : ''}</div>
       <div class="tco-big">${money(t.total, 0)}</div>
@@ -2469,6 +2680,25 @@ function compRow(c, v) {
     <small>Installed ${fdate(c.inst.date)}${c.inst.odo != null ? ` at ${fmtO(c.inst.odo, v)} ${UM(v)}` : ''} · ${fmtO(c.miles, v)} ${UM(v)} · ${plural(c.days || 0, 'day')} · ${c.cost ? money(c.cost) + (c.est ? '*' : '') : 'no cost'}</small>
     ${h.frac != null ? `<div class="life"><i class="${h.level}" style="width:${(h.frac * 100).toFixed(0)}%"></i></div>` : ''}<small class="muted">${esc(h.basis)}${h.next ? ' · ' + esc(h.next) : ''}</small></div>${pill(h)}</a>`;
 }
+const myPartsOf = v => (db.parts || []).filter(p => !p.ref && p.fitsVid === v.id);
+const myPartCats = v => { const ids = new Set(secsFor(v).map(s => s.id)); return Object.entries(CAT).filter(([, c]) => ids.has(c.sec)); };
+function myPartsCard(v) {
+  const ps = myPartsOf(v);
+  return `<section class="card my-parts"><div class="card-head"><h3>${I.layers} My part numbers</h3><button class="btn small" data-act="addMyPart">${I.plus} Add</button></div>
+    ${ps.length ? `<div class="list">${ps.map(p => `<button class="entry" data-act="editMyPart" data-id="${esc(p.id)}"><div class="e-main"><b>${esc([p.brand, p.part].filter(Boolean).join(' '))}</b><div class="e-sub">${esc(CAT[p.cat]?.label || p.cat)}${p.name && p.name !== `${p.brand} ${p.part}` ? ' · ' + esc(p.name) : ''}${p.notes ? ' · ' + esc(p.notes) : ''}</div></div></button>`).join('')}</div>
+      <p class="muted" style="margin:8px 0 0;font-size:.8rem">These show first, marked “fits”, when you log a service for this ${esc(VT(v).l.split(' /')[0].toLowerCase())}.</p>`
+    : `<p class="muted" style="margin:0">Save the exact part numbers for this ${esc(VT(v).l.split(' /')[0].toLowerCase())} (filters, plugs, belts, batteries). They show up first when you log a service.</p>`}</section>`;
+}
+function myPartForm(v, p) {
+  const cats = myPartCats(v);
+  openForm({ title: p ? 'Edit part number' : 'Add a part number', saveLabel: p ? 'Save' : 'Add part',
+    fields: [{ k: 'catL', l: 'Part type', t: 'select', opts: cats.map(([, c]) => c.label), req: true }, { k: 'brand', l: 'Brand', t: 'text', req: true, ph: 'e.g. Hiflofiltro' }, { k: 'part', l: 'Part number', t: 'text', req: true, ph: 'e.g. HF204' }, { k: 'name', l: 'Description', t: 'text', ph: 'Optional' }, { k: 'notes', l: 'Notes', t: 'text', ph: 'Where to buy, cross-references…' }],
+    values: p ? { ...p, catL: CAT[p.cat]?.label } : {},
+    onDelete: p ? () => { db.parts = db.parts.filter(x => x.id !== p.id); save(); } : undefined,
+    onSave: vals => { const cat = (cats.find(([, c]) => c.label === vals.catL) || cats[0])[0];
+      const rec = { cat, brand: vals.brand, part: vals.part, name: vals.name || `${vals.brand} ${vals.part}`, notes: vals.notes || '', fitsVid: v.id, updated: todayISO() };
+      if (p) Object.assign(p, rec); else { db.parts = db.parts || []; db.parts.push({ id: 'u' + uid(), created: todayISO(), ...rec }); toast('Part number saved'); } } });
+}
 function viewOverview(v, focus) {
   const comps = compsV(v), cur = comps.filter(c => c.current), sp = v.specs || {};
   const t = vtype(v), allow = SYS_BY_TYPE[t], slotOk = SLOTS_BY_TYPE[t] || (() => true);
@@ -2476,10 +2706,14 @@ function viewOverview(v, focus) {
   const missing = sys.flatMap(([, , , slots]) => slots).filter(s => !s.startsWith('tire:Spare') && !s.startsWith('rotors') && s !== 'wires' && s !== 'coils' && !cur.some(c => c.slot === s));
   const extra = t === 'car' || focus ? [] : secsFor(v).filter(sec => !['oil', 'coolant', 'brakes', 'tires', 'plugs', 'battery', 'airFilter', 'cabinFilter'].includes(sec.id));
   return `<div class="page-title"><h2>${t === 'car' ? 'Vehicle' : esc(VT(v).l.split(' /')[0])} overview</h2><a class="btn small" href="#/specs">${VT(v).icon} Specs</a></div>
-    <section class="card ov-head"><div class="vcard"><span class="sicon c-vt-${t}">${VT(v).icon}</span><div class="vinfo"><b>${esc(vname(v))}</b><small>${esc(vdesc(v))}${v.engine ? ' · ' + esc(v.engine) : ''}</small></div></div>
+    <section class="card ov-head"><div class="vcard"><span class="sicon c-vt-${t}">${VT(v).icon}</span><div class="vinfo"><b>${esc(vname(v))}</b><small>${esc(v.src?.trim === 'EPA' ? [v.year, v.make, v.model].filter(Boolean).join(' ') : vdesc(v))}</small></div><button class="btn small" data-act="editVehicle" data-id="${v.id}">${I.edit} Edit</button></div>
+      <div class="eng-row">${I.engine}<div><b>${esc(engSum(v) || 'Engine not set')}</b><small>${[v.fuelType && esc(v.fuelType) + srcTag(v, 'fuelType'), v.transmission && esc(v.transmission) + srcTag(v, 'transmission'), v.drive && esc(v.drive) + srcTag(v, 'drive')].filter(Boolean).join(' · ') || (engSum(v) ? '' : '<span class="muted">Add size and cylinders, or fill them from the database.</span>')}</small>
+        ${engSum(v) ? `<div class="srctags">${[['engDispL', 'Size'], ['engCc', 'cc'], ['engCyl', 'Cylinders'], ['engConfig', 'Layout'], ['engAsp', 'Aspiration']].filter(([k]) => v[k] != null && v[k] !== '' && v.src?.[k]).map(([k, l]) => `<span>${l}${srcTag(v, k)}</span>`).join('')}</div>` : ''}</div>
+        <button class="btn small" data-act="fillVehicle" data-id="${v.id}">${I.search} Fill from database</button></div>
       <div class="spec" style="margin-top:10px"><div><span>${t === 'boat' ? 'HIN' : 'VIN'}</span>${(t === 'boat' ? v.hin : v.vin) ? `<code>${esc(t === 'boat' ? v.hin : v.vin)}</code>` : '<span class="muted">Not set</span>'}</div><div><span>${ODOL(v)}</span>${fmtO(curOdo(v), v)} ${UM(v)}</div>
         <div><span>Oil</span>${[sp.oilCapacity && sp.oilCapacity + ' qt', sp.oilViscosity].filter(Boolean).join(' · ') || '<span class="muted">—</span>'}</div>${t === 'boat' ? `<div><span>Lower unit</span>${esc([sp.lowerUnitCap && sp.lowerUnitCap + ' oz', sp.lowerUnitLube].filter(Boolean).join(' · ') || '—')}</div>` : `<div><span>Tires</span>${esc(sp.tireSize || '—')}${sp.psiFront ? ` · ${sp.psiFront}/${sp.psiRear || sp.psiFront} PSI` : ''}</div>`}
         <div><span>Battery</span>${esc([sp.batteryGroup && 'Group ' + sp.batteryGroup, sp.batteryCca && sp.batteryCca + ' CCA'].filter(Boolean).join(' · ') || '—')}</div><div><span>Plugs</span>${esc([specOf(v, 'plugCount') && specOf(v, 'plugCount') + '×', sp.plugPart, sp.plugGap && sp.plugGap + '"'].filter(Boolean).join(' ') || '—')}</div></div></section>
+    ${focus ? '' : myPartsCard(v)}
     <section class="card diag-card">${typeDiagram(v, cur)}<div class="diag-side"><p class="muted" style="margin:0 0 8px;font-size:.84rem">Tap a zone to filter. Colors show health from intervals and your measurements.</p>
       <div class="legend col"><span><i style="background:var(--ok)"></i>OK</span><span><i style="background:var(--soon)"></i>Soon</span><span><i style="background:var(--over)"></i>Replace</span><span><i style="background:var(--line)"></i>Not logged</span></div>${focus ? `<a href="#/overview" class="btn small" style="margin-top:10px">Show all</a>` : ''}</div></section>
     ${sys.map(([id, title, icon, slots]) => { const cs = slots.map(s => cur.find(c => c.slot === s)).filter(Boolean);
@@ -2566,7 +2800,7 @@ function render() {
   app.innerHTML = html;
   updateBadge();
 }
-window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+window.addEventListener('hashchange', () => { render(); if (!scrollLock.isOn()) window.scrollTo(0, 0); });
 
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el) return;
@@ -2578,6 +2812,8 @@ document.addEventListener('click', e => {
     editMaint: () => maintForm(v, SEC[el.dataset.sec], v.maint[el.dataset.sec].find(x => x.id === el.dataset.id)),
     select: () => { db.settings.current = el.dataset.id; save(); render(); toast(`Switched to ${vname(cur())}`); },
     editVehicle: () => addVehicle(byId(el.dataset.id)),
+    fillVehicle: () => addVehicle(byId(el.dataset.id), { fill: true }),
+    addMyPart: () => myPartForm(v), editMyPart: () => { const p = (db.parts || []).find(x => x.id === el.dataset.id); if (p) myPartForm(v, p); },
     eraseVehicle: () => eraseVehicle(byId(el.dataset.id)),
     resetFuel: () => resetFuel(v), resetFuelV: () => resetFuel(byId(el.dataset.id)),
     undoReset: () => { delete v.fuelStatsFrom; delete v.fuelResetDate; save(); render(); toast('Reset undone'); },

@@ -24,7 +24,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text)}
-body{font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;
+body{font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh;
   padding-bottom:calc(76px + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent}
 a{color:var(--accent);text-decoration:none}
 h2,h3{margin:0;line-height:1.2}
@@ -183,16 +183,16 @@ main{max-width:720px;margin:0 auto;padding:6px 14px 24px;outline:none}
 /* dialogs */
 dialog{border:0;padding:0;color:var(--text);background:transparent}
 dialog::backdrop{background:rgba(6,10,20,.5);backdrop-filter:blur(2px)}
-.sheet{width:100%;max-width:640px;max-height:92vh;margin:auto auto 0;border-radius:24px 24px 0 0;background:var(--surface);overflow:hidden}
-@media (min-width:700px){.sheet{margin:auto;border-radius:24px;max-height:88vh}}
-.sheet-inner{display:flex;flex-direction:column;max-height:92vh;margin:0}
+.sheet{width:100%;max-width:640px;max-height:92vh;max-height:92dvh;margin:auto auto 0;border-radius:24px 24px 0 0;background:var(--surface);overflow:hidden}
+@media (min-width:700px){.sheet{margin:auto;border-radius:24px;max-height:88vh;max-height:88dvh}}
+.sheet-inner{display:flex;flex-direction:column;max-height:92vh;max-height:92dvh;margin:0}
 .sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
 .sheet-head h3{font-size:1.1rem}
 .icon-btn{width:44px;height:44px;border-radius:12px;border:0;background:var(--surface-2);color:var(--text);display:grid;place-items:center;cursor:pointer}
 .sheet-body{overflow:auto;padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px;-webkit-overflow-scrolling:touch}
 .sheet-foot{display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
 .sheet-foot .btn{flex:1}
-.confirm{width:min(92vw,420px);border-radius:22px;background:var(--surface);margin:auto}
+.confirm{width:min(92vw,420px);border-radius:22px;background:var(--surface);margin:auto;max-height:90vh;max-height:90dvh;overflow-y:auto;overscroll-behavior:contain}
 .confirm-inner{padding:20px}
 .confirm-inner h3{margin-bottom:8px}
 .confirm-inner p{margin:0 0 14px;color:var(--muted)}
@@ -432,7 +432,7 @@ td.good b{color:var(--ok)}td.warn b{color:var(--soon)}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--wm-op:.04;--wm-filter:none}}
 :root[data-theme=dark]{--wm-op:.04;--wm-filter:none}
 /* background watermark: fixed, behind content, never interactive */
-body::before{content:"";position:fixed;left:0;right:0;bottom:calc(84px + env(safe-area-inset-bottom));height:min(56vh,440px);
+body::before{content:"";position:fixed;left:0;right:0;bottom:calc(84px + env(safe-area-inset-bottom));height:min(56vh,440px);height:min(56dvh,440px);
   background:url(img/riznoss-watermark.png) center/contain no-repeat;opacity:var(--wm-op);filter:var(--wm-filter);pointer-events:none;z-index:0}
 main#app{position:relative;z-index:1}
 @media print{body::before{display:none}}
@@ -512,3 +512,43 @@ main#app{position:relative;z-index:1}
 .zone:hover circle,.zone:focus circle{filter:brightness(1.15)}
 .cardiag .frame{fill:none;stroke:var(--muted);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;opacity:.55}.cardiag .frame.thin{stroke-width:2;opacity:.35}
 .tco-rates.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+/* v10: vehicle pickers */
+.combo-f{position:relative}
+.combo{display:flex;align-items:stretch;position:relative}
+.combo input{flex:1;min-width:0;padding-right:40px}
+.combo-btn{position:absolute;right:2px;top:2px;bottom:2px;width:36px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;border-radius:10px}
+.combo-btn svg{width:16px;height:16px}
+.combo-list{position:absolute;left:0;right:0;top:calc(100% - 2px);z-index:30;max-height:260px;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.28);padding:4px;min-width:220px}
+.combo-f.half .combo-list,.field.half .combo-list{min-width:min(280px,86vw)}
+.combo-opt{padding:9px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:.92rem}
+.combo-opt:hover,.combo-opt.on{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.combo-opt.own{color:var(--accent);font-weight:600}
+.combo-note{padding:7px 10px;font-size:.78rem;color:var(--muted)}
+.otag{font-size:.66rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:2px 6px;border-radius:6px;background:var(--surface-2);color:var(--muted);flex:none}
+.otag.epa{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.otag.nhtsa{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}
+.otag.mine{background:color-mix(in srgb,var(--soon) 20%,transparent);color:var(--soon)}
+.srctag{font-style:normal;font-size:.62rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-left:6px;padding:1px 5px;border-radius:5px;background:var(--surface-2);color:var(--muted);vertical-align:1px}
+.srctag.epa{color:var(--ok)} .srctag.nhtsa{color:var(--accent)}
+.fillrow{display:flex;flex-direction:column;gap:6px}
+.fillrow .btn{align-self:flex-start}
+.eng-row{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2)}
+.eng-row>svg{width:22px;height:22px;flex:none;color:var(--accent)}
+.eng-row>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.eng-row small{color:var(--muted);font-size:.8rem}
+.eng-row .srctags{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.72rem;color:var(--muted)}
+.ov-head .vcard .btn{margin-left:auto}
+@media (max-width:420px){.eng-row{flex-wrap:wrap}.eng-row .btn{width:100%}}
+.combo-opt .ot{flex:1;min-width:0;overflow-wrap:anywhere}
+.combo-list.right{left:auto;right:0}
+
+/* iOS / WebKit scroll fixes (Safari + Brave on iPhone) */
+/* 16px minimum on every text control: iOS zooms the page on focus below 16px and leaves it zoomed and shifted */
+input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:max(16px,1em)!important}
+/* size to the *visible* viewport: on iOS 100vh is the toolbar-hidden height, so sheets ran under the browser bars */
+dialog{max-height:100vh;max-height:100dvh;overscroll-behavior:contain}
+/* scroll inside, never chain to the page behind */
+.sheet-body,.combo-list,.pick-results,.confirm-inner{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.sheet-body{overflow-y:auto;overflow-x:hidden;min-height:0;flex:1 1 auto}
+html.modal-open,html.modal-open body{overflow:hidden;overscroll-behavior:none}
